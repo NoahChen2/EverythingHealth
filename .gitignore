@@ -1,0 +1,20 @@
+# Ignore Python virtual environment folders
+.venv_py310/
+
+.AndroidStudioApp/
+
+.flutter/
+
+# Ignore specific project folders
+image_to_macros_archive/
+
+# Common Python ignores (optional but recommended)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE/Editor specific (examples, add your own)
+.vscode/
+.idea/
+*.swp
+*~
