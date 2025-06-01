@@ -37,10 +37,13 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   late Animation<Offset> _logFoodPageSlideAnimation;
   late Animation<Offset>
+      // ignore: unused_field
       _linearLogFoodPageSlideAnimation; // For dragging LogFoodPage
 
   bool _isDraggingAddPage = false;
   bool _isDraggingLogFoodPage = false; // For dragging LogFoodPage
+
+  static const double _logFoodPageEdgeDragWidth = 40.0;
 
   double _screenHeight = 0.0;
   double _screenWidth = 0.0;
@@ -317,16 +320,50 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           },
         ),
         GestureDetector(
-          // For AddPage
+          behavior: HitTestBehavior
+              .translucent, // Allow gesture to be caught to check position
           onVerticalDragStart: (details) {
+            // Calculate current visual bounds of AddPage's main content
+            double vSlide = _addPageAnimationController
+                .value; // 0 (bottom) to 1 (default open)
+
+            // Top of the AddPage's full-screen container due to SlideTransition
+            double addPageContainerTopY = _screenHeight * (1.0 - vSlide);
+
+            // Internal positioning and height of the orange content within AddPage
+            double actualOrangeContentHeight = (_addPageContentHeight +
+                    _currentVisualUpwardOverdragPixels)
+                .clamp(0.0,
+                    _screenHeight * 0.75); // Matches AddPage's internal clamp
+            double orangeContentTopOffsetInContainer =
+                (_screenHeight - _addPageContentHeight) -
+                    _currentVisualUpwardOverdragPixels;
+
+            // Final screen coordinates of the orange content
+            double orangeContentScreenTopY =
+                addPageContainerTopY + orangeContentTopOffsetInContainer;
+            Rect addPageVisibleRect = Rect.fromLTWH(0, orangeContentScreenTopY,
+                _screenWidth, actualOrangeContentHeight);
+
+            // Check if drag started outside the visible AddPage content
+            // Also, if AddPage is fully closed and user tries to drag down, ignore.
+            if (!addPageVisibleRect.contains(details.globalPosition) ||
+                (vSlide < 0.01)) {
+              _isDraggingAddPage = false; // Ensure it's not set
+              return; // Ignore the drag
+            }
+
+            // If drag is valid, proceed
             _addPageAnimationController.stop();
             _overdragReturnAnimationController.stop();
             _isDraggingAddPage = true;
-            setState(
-                () {}); // Ensure UI updates if animation choice depends on this
+            setState(() {}); // To switch to linear animation
           },
           onVerticalDragUpdate: (details) {
-            if (!_isDraggingAddPage) return;
+            if (!_isDraggingAddPage) {
+              return; // Process only if drag was initiated correctly
+            }
+            // ... rest of onVerticalDragUpdate logic remains the same
             final double pixelDyDelta = details.delta.dy;
             bool changed = false;
             if (_cumulativeLinearUpwardOverdragInput > 0 ||
@@ -341,8 +378,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 _cumulativeLinearUpwardOverdragInput = 0;
                 double valChange = remainingDownwardPixelDelta / _screenHeight;
                 _addPageAnimationController.value =
-                    (_addPageAnimationController.value - valChange)
-                        .clamp(0.0, 1.0);
+                    (_addPageAnimationController.value - valChange).clamp(
+                        _dismissedControllerValue, _defaultOpenControllerValue);
               }
               _currentVisualUpwardOverdragPixels =
                   _calculateCurvedOverdragPixels(
@@ -357,20 +394,23 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               }
               double valChange = pixelDyDelta / _screenHeight;
               double oldValue = _addPageAnimationController.value;
-              _addPageAnimationController.value =
-                  (oldValue - valChange).clamp(0.0, 1.0);
-              if ((oldValue - _addPageAnimationController.value).abs() > 0.0001) {
+              double newValueRequest = oldValue - valChange;
+              _addPageAnimationController.value = newValueRequest.clamp(
+                  _dismissedControllerValue, _defaultOpenControllerValue);
+              if ((oldValue - _addPageAnimationController.value).abs() >
+                  0.0001) {
                 changed = true;
               }
             }
             if (changed) setState(() {});
           },
           onVerticalDragEnd: (details) {
-            if (!_isDraggingAddPage) return;
+            if (!_isDraggingAddPage) {
+              return; // Process only if drag was initiated correctly
+            }
+            // ... rest of onVerticalDragEnd logic remains the same
             _isDraggingAddPage = false;
-            // Ensure _isDraggingAddPage is false before any animation starts for correct animation choice
             setState(() {});
-
             if (_cumulativeLinearUpwardOverdragInput > 0.01 &&
                 _currentVisualUpwardOverdragPixels > 0.01) {
               final double startOverdragPixels =
@@ -399,20 +439,36 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             } else {
               _cumulativeLinearUpwardOverdragInput = 0.0;
               _currentVisualUpwardOverdragPixels = 0.0;
-              double dismissThreshold = _defaultOpenControllerValue -
-                  ((_addPageContentHeight / 2.0) / _screenHeight);
-              double targetValue =
-                  (_addPageAnimationController.value < dismissThreshold)
-                      ? 0.0
-                      : 1.0;
-              _addPageAnimationController.animateTo(targetValue);
-              if (targetValue == 0.0) {
-                addPageOpen = false; // Update addPageOpen state
+              double dismissThresholdInPixels = _addPageContentHeight / 2.0;
+              double controllerValueChangeForDismissal =
+                  dismissThresholdInPixels / _screenHeight;
+              double dismissTriggerControllerValue =
+                  _defaultOpenControllerValue -
+                      controllerValueChangeForDismissal;
+              double targetMainControllerValue;
+              if (_addPageAnimationController.value <
+                  dismissTriggerControllerValue) {
+                targetMainControllerValue = _dismissedControllerValue;
+              } else {
+                targetMainControllerValue = _defaultOpenControllerValue;
               }
-              if (mounted) setState(() {});
+              _addPageAnimationController.animateTo(targetMainControllerValue);
+              if (_addPageAnimationController.value <
+                      dismissTriggerControllerValue &&
+                  targetMainControllerValue == _dismissedControllerValue) {
+                // check if it was actually dismissed
+                addPageOpen = false; // Update state if dismissed
+              } else if (targetMainControllerValue ==
+                  _defaultOpenControllerValue) {
+                addPageOpen = true;
+              }
+              if (mounted) {
+                setState(() {});
+              }
             }
           },
           child: SlideTransition(
+            // ... (SlideTransition setup for AddPage remains the same) ...
             position:
                 _isDraggingAddPage && _cumulativeLinearUpwardOverdragInput <= 0
                     ? _linearAddPageSlideAnimation
@@ -429,45 +485,80 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         if (logFoodIndex != -1 ||
             _logFoodPageAnimationController.status != AnimationStatus.dismissed)
           GestureDetector(
-            // For LogFoodPage Drag
             onHorizontalDragStart: (details) {
+              // --- MODIFICATION START ---
+              // Check if the drag started on the left edge of the LogFoodPage.
+              // details.localPosition.dx is relative to the GestureDetector's own bounds.
+              // When LogFoodPage is fully shown, its left edge corresponds to localPosition.dx = 0.
+              if (details.localPosition.dx > _logFoodPageEdgeDragWidth) {
+                // If drag starts outside the sensitive left edge area, do nothing for this drag.
+                _isDraggingLogFoodPage =
+                    false; // Ensure it's false if drag is ignored
+                return;
+              }
+              // --- MODIFICATION END ---
+
               if (_logFoodPageAnimationController.isAnimating) {
                 _logFoodPageAnimationController.stop();
               }
               _isDraggingLogFoodPage = true;
-              setState(() {});
+              // Call setState to ensure the SlideTransition uses the linear animation
+              // if its choice depends on _isDraggingLogFoodPage.
+              if (mounted) {
+                setState(() {});
+              }
             },
             onHorizontalDragUpdate: (details) {
-              if (!_isDraggingLogFoodPage || _screenWidth == 0) return;
+              if (!_isDraggingLogFoodPage || _screenWidth == 0) {
+                return; // Check if drag was initiated
+              }
+
               double delta = details.delta.dx / _screenWidth;
+              // Controller value: 0.0 = dismissed (right), 1.0 = shown (Offset.zero)
+              // Dragging right (positive delta.dx) should decrease controller.value
               _logFoodPageAnimationController.value -= delta;
               _logFoodPageAnimationController.value =
                   _logFoodPageAnimationController.value.clamp(0.0, 1.0);
             },
             onHorizontalDragEnd: (details) {
-              if (!_isDraggingLogFoodPage) return;
+              if (!_isDraggingLogFoodPage) {
+                return; // Only proceed if this drag was for LogFoodPage
+              }
               _isDraggingLogFoodPage = false;
+
               final currentValue = _logFoodPageAnimationController.value;
-              setState(() {});
+              // Call setState to ensure SlideTransition switches to curved animation for the snap
+              if (mounted) {
+                setState(() {});
+              }
 
               if (currentValue < 0.5) {
+                // Dismiss threshold
                 _logFoodPageAnimationController
                     .reverse()
                     .whenCompleteOrCancel(() {
                   if (mounted &&
                       _logFoodPageAnimationController.status ==
                           AnimationStatus.dismissed) {
-                    if (logFoodIndex != -1) setState(() => logFoodIndex = -1);
+                    if (logFoodIndex != -1) {
+                      setState(() {
+                        logFoodIndex = -1;
+                      });
+                    }
                   }
                 });
               } else {
-                _logFoodPageAnimationController.forward();
+                _logFoodPageAnimationController.forward(); // Snap back to open
               }
             },
             child: SlideTransition(
-              position: _isDraggingLogFoodPage
-                  ? _linearLogFoodPageSlideAnimation // Use linear for LogFoodPage drag
-                  : _logFoodPageSlideAnimation, // Use curved for LogFoodPage automated
+              position:
+                  _isDraggingLogFoodPage // Use linear animation if dragging
+                      ? Tween<Offset>(
+                              begin: const Offset(1.0, 0.0), end: Offset.zero)
+                          .animate(
+                              _logFoodPageAnimationController) // Re-create linear if not stored
+                      : _logFoodPageSlideAnimation, // Original curved animation
               child: LogFoodPage(
                 logFoodIndex: logFoodIndex,
                 prevLogFoodIndex: prevLogFoodIndex,

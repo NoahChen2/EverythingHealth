@@ -120,7 +120,7 @@ class MyTopNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double barHeight = 80;
+    double barHeight = 60;
     Color barColor = const Color.fromARGB(255, 0, 36, 72);
     return Align(
       alignment: Alignment.topCenter,

@@ -67,6 +67,7 @@ class AddPage extends StatelessWidget {
   });
 
   @override
+  
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
       double pageHeight = constraints.maxHeight;
@@ -92,101 +93,104 @@ class AddPage extends StatelessWidget {
           ),
         ),
         Align(
-            alignment: Alignment.bottomCenter,
-            child: GestureDetector(
-              // To prevent taps on content from dismissing
-              onTap: () {},
-              behavior: HitTestBehavior.opaque,
-              child: SizedBox(
-                  height: currentOrangeHeight,
-                  width: double.infinity,
-                  child: Container(
-                    color: const Color.fromARGB(255, 255, 153, 0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 40),
-                        const Text("Log Food",
-                            style: TextStyle(
-                              fontSize: 20,
-                              color: Color.fromARGB(255, 255, 255, 255),
-                              decoration: TextDecoration.none,
-                            )),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _menuOptionRectangle(
-                                height: menuOptionHeight,
-                                width: menuOptionWidth,
-                                icon: Icons.search,
-                                label: "Food",
-                                colorUsed: Colors.purple,
-                                onTap: () => onLogFoodSelection(0)),
-                            _menuOptionRectangle(
-                                height: menuOptionHeight,
-                                width: menuOptionWidth,
-                                icon: Icons.qr_code_scanner,
-                                label: "Barcode",
-                                colorUsed: Colors.green,
-                                onTap: () => onLogFoodSelection(1)),
-                            _menuOptionRectangle(
-                                height: menuOptionHeight,
-                                width: menuOptionWidth,
-                                icon: Icons.camera,
-                                label: "Photo",
-                                colorUsed: const Color.fromARGB(255, 8, 165, 237),
-                                onTap: () => onLogFoodSelection(2)),
-                          ]
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _menuOptionRectangle(
-                                height: menuOptionHeight,
-                                width: menuOptionWidth,
-                                icon: Icons.history, // Changed Icon
-                                label: "History", // Changed Label
-                                colorUsed: Colors.deepOrange, // Changed Color
-                                onTap: () =>
-                                    onLogFoodSelection(3)), // Changed Index
-                            _menuOptionRectangle(
-                                height: menuOptionHeight,
-                                width: menuOptionWidth,
-                                icon: Icons.favorite, // Changed Icon
-                                label: "Favorites", // Changed Label
-                                colorUsed: Colors.yellowAccent, // Changed Color
-                                onTap: () =>
-                                    onLogFoodSelection(4)), // Changed Index
-                          ],
-                        ),
-                        const Text("Log Excercise",
-                            style: TextStyle(
-                              fontSize: 20,
-                              color: Color.fromARGB(255, 255, 255, 255),
-                              decoration: TextDecoration.none,
-                            )),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _menuOptionRectangle(
-                                height: menuOptionHeight,
-                                width: menuOptionWidth,
-                                icon: Icons.man,
-                                label: "Cardio",
-                                colorUsed: Colors.blue,
-                                onTap: () => onLogFoodSelection(4)),
-                            _menuOptionRectangle(
-                                height: menuOptionHeight,
-                                width: menuOptionWidth,
-                                icon: Icons.fitness_center,
-                                label: "Strength",
-                                colorUsed: Colors.red,
-                                onTap: () => onLogFoodSelection(5)),
-                          ],
-                        )
-                      ],
-                    ),
-                  )),
+            alignment: Alignment.bottomCenter,            
+            child: SizedBox(
+              height: currentOrangeHeight,
+              child: GestureDetector(
+                // To prevent taps on content from dismissing
+                onTap: () {},
+                behavior: HitTestBehavior.opaque,
+                child: SizedBox(
+                    width: double.infinity,
+                    child: Container(
+                      color: const Color.fromARGB(255, 255, 153, 0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 20),
+                          const Text("Log Food",
+                              style: TextStyle(
+                                fontSize: 20,
+                                color: Color.fromARGB(255, 255, 255, 255),
+                                decoration: TextDecoration.none,
+                              )),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _menuOptionRectangle(
+                                  height: menuOptionHeight,
+                                  width: menuOptionWidth,
+                                  icon: Icons.search,
+                                  label: "Food",
+                                  colorUsed: Colors.purple,
+                                  onTap: () => onLogFoodSelection(0)),
+                              _menuOptionRectangle(
+                                  height: menuOptionHeight,
+                                  width: menuOptionWidth,
+                                  icon: Icons.qr_code_scanner,
+                                  label: "Barcode",
+                                  colorUsed: Colors.green,
+                                  onTap: () => onLogFoodSelection(1)),
+                              _menuOptionRectangle(
+                                  height: menuOptionHeight,
+                                  width: menuOptionWidth,
+                                  icon: Icons.camera,
+                                  label: "Photo",
+                                  colorUsed: const Color.fromARGB(255, 8, 165, 237),
+                                  onTap: () => onLogFoodSelection(2)),
+                            ]
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _menuOptionRectangle(
+                                  height: menuOptionHeight,
+                                  width: menuOptionWidth,
+                                  icon: Icons.history, // Changed Icon
+                                  label: "History", // Changed Label
+                                  colorUsed: Colors.deepOrange, // Changed Color
+                                  onTap: () =>
+                                      onLogFoodSelection(3)), // Changed Index
+                              _menuOptionRectangle(
+                                  height: menuOptionHeight,
+                                  width: menuOptionWidth,
+                                  icon: Icons.bookmark, // Changed Icon
+                                  label: "Saved", // Changed Label
+                                  colorUsed: Colors.yellowAccent, // Changed Color
+                                  onTap: () =>
+                                      onLogFoodSelection(4)), // Changed Index
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          const Text("Log Excercise",
+                              style: TextStyle(
+                                fontSize: 20,
+                                color: Color.fromARGB(255, 255, 255, 255),
+                                decoration: TextDecoration.none,
+                              )),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _menuOptionRectangle(
+                                  height: menuOptionHeight,
+                                  width: menuOptionWidth,
+                                  icon: Icons.man,
+                                  label: "Cardio",
+                                  colorUsed: Colors.blue,
+                                  onTap: () => onLogFoodSelection(4)),
+                              _menuOptionRectangle(
+                                  height: menuOptionHeight,
+                                  width: menuOptionWidth,
+                                  icon: Icons.fitness_center,
+                                  label: "Strength",
+                                  colorUsed: Colors.red,
+                                  onTap: () => onLogFoodSelection(5)),
+                            ],
+                          )
+                        ],
+                      ),
+                    )),
+              ),
             ))
       ]);
     });

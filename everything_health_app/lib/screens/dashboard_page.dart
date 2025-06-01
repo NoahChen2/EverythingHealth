@@ -10,19 +10,24 @@ class DashboardPage extends StatelessWidget {
       height: double.infinity,
       color: Theme.of(context).colorScheme.surface, // Example background
       padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 20), // Adjust for status bar
-      child: const Column( // Made column const
+      child: Column( // Removed const from Column
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                "Everything Health Dashboard",
-                style: TextStyle(
-                  fontSize: 20,
-                  color: const Color.fromARGB(255, 219, 219, 219), // Use theme color
-                  decoration: TextDecoration.none, // Default
-                )
+              Material(
+                child: InkWell(
+                  onTap: () => {print("Dashboard tapped")},
+                  child: Text(
+                    "Everything Health Dashboard",
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: const Color.fromARGB(255, 219, 219, 219), // Use theme color
+                      decoration: TextDecoration.none, // Default
+                    )
+                  ),
+                ),
               )
             ],
           )
