@@ -12,12 +12,14 @@ class LogFoodPage extends StatefulWidget {
   final int prevLogFoodIndex;
   final int logFoodIndex;
   final Function(int) onLogFoodSelection;
+  final Function(String) goHome;
 
   const LogFoodPage({
     super.key,
     this.logFoodIndex = -1,
     required this.prevLogFoodIndex,
     required this.onLogFoodSelection,
+    required this.goHome,
   });
 
   @override
@@ -41,6 +43,16 @@ class _LogFoodPageState extends State<LogFoodPage> {
     setState((){
       _addingFood = defaultFood;
     });
+  }
+
+  void _addFoodToSaved(FoodItem food)
+  {
+    print(food);
+  }
+
+  void _addFoodToHistory(FoodItem food)
+  {
+    print(food);
   }
 
   @override
@@ -119,28 +131,31 @@ class _LogFoodPageState extends State<LogFoodPage> {
             navItems: navItems,
           ),
         ),
-        ChooseFoodItem(food: _addingFood, close: _closeAddFood)
+        ChooseFoodItem(food: _addingFood, close: _closeAddFood, goHome: widget.goHome, addFoodToSaved: _addFoodToSaved, addFoodToHistory: _addFoodToHistory)
       ]),
     );
   }
 }
 
 class FoodItem {
-  final String name;
-  final String serving_size;
-  final num grams; // Can be int or double
-  final num calories;
-  final num carbs;
-  final num fats;
-  final num protein;
-  final num sugar;
-  final String normalized_name; // Added normalized_name for consistency
-  final String container_size;
-  final num code;
-  final num id;
-  final Color color;
-  final String image_small_url;
-  final String img_url;
+  static Random random = Random();
+  String name;
+  String serving_size;
+  num grams; // Can be int or double
+  num calories;
+  num carbs;
+  num fats;
+  num protein;
+  num sugar;
+  String normalized_name; // Added normalized_name for consistency
+  num code;
+  dynamic id;
+  Color color;
+  String image_small_url;
+  String img_url;
+  num density;
+  bool densityRequired;
+  int time;
 
   FoodItem({
     required this.name,
@@ -152,19 +167,58 @@ class FoodItem {
     required this.protein,
     required this.sugar,
     required this.normalized_name,
-    this.container_size = "",
+    this.densityRequired = false,
+    this.density = 1,
     this.code = -1,
     this.id = -1,
-    this.color = const Color.fromARGB(255, 255, 255, 255),
+    Color? color,
     this.image_small_url = "",
     this.img_url = "",
-  });
-
-  factory FoodItem.fromJson(Map<String, dynamic> json) {
-    num id = Random().nextInt(1000000);
-    while(id != id){
-      id = Random().nextInt(1000000);
+    this.time = 0,
+  }) : color = color ?? HSLColor.fromAHSL(1.0, random.nextInt(360).toDouble(), .38, .50).toColor(); // Provide a default color if none is given
+  
+  void operator []=(String key, dynamic value) {
+    switch (key) {
+      case 'name':
+        name = value;
+      case 'serving_size':
+        serving_size = value;
+      case 'grams':
+        grams = value;
+      case 'calories':
+        calories = value;
+      case 'carbs':
+        carbs = value;
+      case 'fats':
+        fats = value;
+      case 'protein':
+        protein = value;
+      case 'sugar':
+        sugar = value;
+      case 'normalized_name':
+        normalized_name = value;
+      case 'densityRequired':
+        densityRequired = value;
+      case 'density':
+        density = value;
+      case 'code':
+        code = value;
+      case 'id':
+        id = value;
+      case 'color':
+        color = value;
+      case 'image_small_url':
+        image_small_url = value;
+      case 'img_url':
+        img_url = value;
+      case 'time':
+        time = value;
+      default:
+        throw ArgumentError('Unknown attribute: $key');
     }
+  }
+  
+  factory FoodItem.fromJson(Map<String, dynamic> json) {
     return FoodItem(
       name: json['name'] ?? 'Unknown Food',
       serving_size: json['serving_size'] ?? 'N/A',
@@ -175,10 +229,41 @@ class FoodItem {
       protein: json['protein'] ?? 0,
       sugar: json['sugar'] ?? 0,
       normalized_name: json['normalized_name'] ?? json['name'] ?? 'Unknown Food',
+      densityRequired: json['densityRequired'] ?? false,
+      density: json['density'] = 1,
       code: json['code'] ?? -1,
-      id: id,
+      color: json['color'] != null ? Color(json['color']) : HSLColor.fromAHSL(1.0, random.nextInt(360).toDouble(), .38, .50).toColor(),
+      id: json['id'] ?? -1,
       image_small_url: json['image_small_url'] ?? json['image_url'] ?? "NO_IMAGE_FOUND",
       img_url: json['image_url'] ?? json['image_small_url'] ?? "NO_IMAGE_FOUND",
+      time: json['time'] ?? 0,
     );
+  }
+
+  @override
+  String toString(){
+    return "Food Name: $name\nServing Size: $serving_size\nGrams: $grams\nCalories: $calories\nCarbs: $carbs\nFats: $fats\nProtein: $protein\nSugar: $sugar\nCode: $code\nID: $id";
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'serving_size': serving_size,
+      'grams': grams,
+      'calories': calories,
+      'carbs': carbs,
+      'fats': fats,
+      'protein': protein,
+      'sugar': sugar,
+      'normalized_name': normalized_name,
+      'densityRequired': densityRequired,
+      'density': density,
+      'code': code,
+      'id': id,
+      'color': color.toARGB32(), 
+      'image_small_url': image_small_url,
+      'img_url': img_url,
+      'time': time,
+    };
   }
 }

@@ -267,6 +267,16 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     return maxVisualUpwardPixelShift * (1.0 - exp(-k * linearInputPixels));
   }
 
+  Function goHome(String status)
+  {
+    return () {
+      print(status);
+      setState(() {
+        _onLogFoodSelection(-1);
+      });
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     _screenHeight = MediaQuery.of(context).size.height;
@@ -563,6 +573,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 logFoodIndex: logFoodIndex,
                 prevLogFoodIndex: prevLogFoodIndex,
                 onLogFoodSelection: _onLogFoodSelection,
+                goHome: goHome,
               ),
             ),
           ),

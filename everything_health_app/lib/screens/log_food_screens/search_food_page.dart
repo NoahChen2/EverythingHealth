@@ -1,12 +1,19 @@
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, unused_import
 
-// ignore: unused_import
+
+import 'dart:math';
+
+
+import 'package:everything_health_app/main.dart';
+import 'package:everything_health_app/models/saved_foods.dart';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 // ignore: unnecessary_import
 import 'package:flutter/rendering.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:isar/isar.dart';
 import 'dart:async';
 import '../log_food_page.dart';
 import 'package:http/http.dart' as http;
@@ -104,7 +111,7 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
 
     } catch (e) {
       print("Error loading or parsing food data: $e");
-      if (mounted) _loadError = "Failed to load food data. Ensure 'local_food_db.json' exists and is in pubspec.yaml.";
+      if (mounted) _loadError = "Failed to load food data. Ensure 'cleaned_normal_local_food_db.json' exists and is in pubspec.yaml. $e";
     } finally {
       if (mounted) {
         setState(() {
@@ -142,12 +149,12 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
     return normalized;
   }
 
-  void _updateDisplayedFoods(String query) {
+  Future<void> _updateDisplayedFoods(String query) async {
     if (!mounted) return;
     final List<String> searchTerms = query.split(' ').where((term) => term.isNotEmpty).toList();
   
-    List<FoodItem> newDisplayedFoods;
-    setState(() {
+    List<FoodItem> newDisplayedFoods = [];
+    
       if (query.isEmpty) {
         // Show initial set from the raw maps, convert only these to FoodItem
         newDisplayedFoods = [];
@@ -161,15 +168,49 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
         
       } else {
         // Filter raw maps, then convert only matches to FoodItem objects
-        
-        List<FoodItem> matchedFoods = _allFoodDataMaps
+        List<Map<String, dynamic>> matchedJsonMaps = _allFoodDataMaps
             .where((foodMap) {
               final String name = foodMap['normalized_name'] as String? ?? '';
               return searchTerms.every((term) => name.contains(term));
-            })
-            .map((jsonMap) => FoodItem.fromJson(jsonMap))
-            .toList();
-        matchedFoods.sort((a, b) {
+            }).toList();
+        for (var jsonMap in matchedJsonMaps) {
+          try {
+            final String normalizedName = jsonMap['normalized_name'] ?? '';
+            final String serving_size = jsonMap['serving_size'] ?? '';
+            final double grams = jsonMap['grams'] ?? '';
+            final double calories = jsonMap['calories'] ?? '';
+            final double carbs = jsonMap['carbs'] ?? '';
+            final double fats = jsonMap['fats'] ?? '';
+            final double protein = jsonMap['protein'] ?? '';
+            final double sugar = jsonMap['sugar'] ?? '';
+            
+            
+            // 3. Perform the Isar search for each item, just like in _apiFoodSearch
+            final existingFood = await isar.savedFoods
+                .filter()
+                .normalized_nameEqualTo(normalizedName)
+                .serving_sizeEqualTo(serving_size)
+                .gramsEqualTo(grams)
+                .caloriesEqualTo(calories)
+                .carbsEqualTo(carbs)
+                .fatsEqualTo(fats)
+                .proteinEqualTo(protein)
+                .sugarEqualTo(sugar)
+                .findFirst();
+
+            if (existingFood != null) {
+              // If a saved version exists, convert it to a FoodItem and add it to our list
+              newDisplayedFoods.add(FoodItem.fromJson(existingFood.toJson()));
+            } else {
+              // Otherwise, use the data from the local JSON file
+              newDisplayedFoods.add(FoodItem.fromJson(jsonMap));
+            }
+          } catch (e) {
+            print("Error processing local search item: $e");
+          }
+        }
+        
+        newDisplayedFoods.sort((a, b) {
           String nameA = a.normalized_name;
           String nameB = b.normalized_name;
 
@@ -194,12 +235,10 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
           // 3. Optional Tertiary Sort (e.g., alphabetical as a tie-breaker)
           return nameA.compareTo(nameB);
         });
-        newDisplayedFoods = matchedFoods;
       }
       setState(() {
         _displayedFoods = newDisplayedFoods;
       });
-    });
     if (_listScrollController.hasClients && _displayedFoods.isNotEmpty) {
       // Using WidgetsBinding.instance.addPostFrameCallback ensures that the scroll
       // happens after the ListView has had a chance to rebuild with the new items.
@@ -220,16 +259,16 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
     }
   }
   
-  double _toGrams(String str) {
+  List _toGrams(String str) {
     //WILL BREAK IF YOU ADD UNIT THAT ENDS IN 'x' FOR MULTI-WORD UNITS
     String units = str.replaceAll(RegExp(r'[\d.,/]+'), ' ').replaceAll(RegExp(r'[\s]+'), ' ').trim().toLowerCase();
-    List<String> mathStuff = str.replaceAll(',', '.').replaceAll(RegExp(r'[^\d.,\sx*]'), ' ').replaceAll(RegExp(r'[x*]+'), ' x ').replaceAll(RegExp(r'\s+'), ' ').trim().toLowerCase().split(" ");
+    List<String> mathStuff = str.replaceAll(',', '.').replaceAll(RegExp(r'[^\d.,/\sx*]'), ' ').replaceAll(r'/',r' / ').replaceAll(RegExp(r'[x*]+'), ' x ').replaceAll(RegExp(r'\s+'), ' ').trim().toLowerCase().split(" ");
     String doublePart = str.replaceAll(RegExp(r'[^\d.,\s]+'), ' ').trim();
     doublePart = doublePart.split(" ")[0];
     doublePart = doublePart.replaceAll(',', '.');
     String unitsCalc = units.split(" ")[0].trim().replaceAll(RegExp(r'[^гa-zA-Z*]'), '').contains(RegExp(r'[x*]')) ? units.split(" ").length > 1 ? units.split(" ")[1].trim().replaceAll(RegExp(r'[^гa-zA-Z]'), ''): 'x' : units.split(" ")[0].trim().replaceAll(RegExp(r'[^гa-zA-Z]'), '');
     if (doublePart.isEmpty || str.substring(0,1).replaceAll(RegExp(r'[\d.]'), 'NUMBER') != 'NUMBER'){
-      return -9999999999;
+      return [-9999999999, "NO_UNITS"];
     }
     double amt = double.parse(doublePart);
     try {
@@ -237,67 +276,83 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
         amt = double.parse(mathStuff[0]) *  double.parse(mathStuff[2]);
       }
     // ignore: empty_catches
-    }catch(e){
-    }
-    if (unitsCalc == 'g' || unitsCalc == 'ml' || unitsCalc == 'grams' || unitsCalc == 
-    'gm' || unitsCalc == 'milliliter' || unitsCalc == 'milliliters' || unitsCalc == 'г' || unitsCalc == 'gram' || unitsCalc == 'gms')
+    }catch(e){}
+    try {
+      if (double.parse(mathStuff[0]) > 0 && double.parse(mathStuff[2]) > 0 && (mathStuff[1] == '/')){
+        amt = double.parse(mathStuff[0]) / double.parse(mathStuff[2]);
+      }
+    // ignore: empty_catches
+    }catch(e){}
+    if (unitsCalc == 'g' || unitsCalc == 'grams' || unitsCalc == 
+    'gm' ||  unitsCalc == 'г' || unitsCalc == 'gram' || unitsCalc == 'gms')
     {
-      return amt;
+      return [amt, unitsCalc, false];
     }
-    else if (unitsCalc == 'l' || unitsCalc == 'kg' || unitsCalc == 'liters' || unitsCalc == 'liter' || unitsCalc == 'killogram' || unitsCalc == 'killograms')
+    else if (unitsCalc == 'ml' || unitsCalc == 'milliliter' || unitsCalc == 'milliliters'){
+      return [amt, unitsCalc, true];
+    }
+    else if (unitsCalc == 'kg' || unitsCalc == 'killogram' || unitsCalc == 'killograms')
     {
-      return amt * 1000;
+      return [amt * 1000, unitsCalc, false];
+    }
+    else if (unitsCalc == 'l' || unitsCalc == 'liters' || unitsCalc == 'liter')
+    {
+      return [amt * 1000, unitsCalc, true];
     }
     else if (unitsCalc == 'fl' || unitsCalc == 'floz'  || unitsCalc == 'fluid')
     {
-      return amt * 30;
+      return [amt * 30, unitsCalc, true];
     }
     else if (unitsCalc == 'oz' || unitsCalc == 'ounce' || unitsCalc == 'ounces')
     {
-      return amt * 28.3495;
+      return [amt * 28.3495, unitsCalc, false];
     }
-    else if (unitsCalc == 'cup' || unitsCalc == 'cups')
+    else if (unitsCalc == 'cup' || unitsCalc == 'cups' || unitsCalc == 'c')
     {
-      return amt * 236.588; // Assuming 1 cup = 236.588 ml
+      return [amt * 236.588, unitsCalc, true]; // Assuming 1 cup = 236.588 ml
     }
     else if (unitsCalc == 'tbsp' || unitsCalc == 'tablespoon' || unitsCalc == 'tbsps' || unitsCalc == 'tablespoons')
     {
-      return amt * 14.787; // Assuming 1 tbsp = 14.787 ml
+      return [amt * 14.787, unitsCalc, true]; // Assuming 1 tbsp = 14.787 ml
     }
     else if (unitsCalc == 'tsp' || unitsCalc == 'teaspoon' || unitsCalc == 'tsps' || unitsCalc == 'teaspoons')
     {
-      return amt * 4.92892; // Assuming 1 tsp = 4.92892 ml
+      return [amt * 4.92892, unitsCalc, true]; // Assuming 1 tsp = 4.92892 ml
     }
-    else if (unitsCalc == 'pound' || unitsCalc == 'lbs' || unitsCalc == 'lb')
+    else if (unitsCalc == 'pounds' || unitsCalc == 'pound' || unitsCalc == 'lbs' || unitsCalc == 'lb')
     {
-      return amt * 453.592; // Assuming 1 pound = 453.592 grams
+      return [amt * 453.592, unitsCalc, false]; // Assuming 1 pound = 453.592 grams
     }
     else if (unitsCalc == 'pt' || unitsCalc == 'pint' || unitsCalc == 'pints' || unitsCalc == 'pts')
     {
-      return amt * 473.176; // Assuming 1 pint = 473.176 ml
+      return [amt * 473.176, unitsCalc, true]; // Assuming 1 pint = 473.176 ml
     }
     else if (unitsCalc == 'quart' || unitsCalc == 'qt' || unitsCalc == 'quarts'  || unitsCalc == 'qts')
     {
-      return amt * 946.353; // Assuming 1 quart = 946.353 ml
+      return [amt * 946.353, unitsCalc, true]; // Assuming 1 quart = 946.353 ml
     }
     else if (unitsCalc == 'mg' || unitsCalc == 'milligrams' || unitsCalc == 'milligram' || unitsCalc == 'mgs')
     {
-      return amt / 1000; // Convert mg to grams
+      return [amt / 1000, unitsCalc, false]; // Convert mg to grams
     }
     else if (unitsCalc == 'cl')
     {
-      return amt * 10;
+      return [amt * 10, unitsCalc, true];
+    }
+    else if (unitsCalc == 'gal' || unitsCalc == 'gals' || unitsCalc == 'gallon' || unitsCalc == 'gallons')
+    {
+      return [amt * 3785.42, unitsCalc, true];
     }
     else
     {
       //print("$units|$doublePart|$unitsCalc");
-      return -9999999999;
+      return [-9999999999, "NO_UNITS", true];
     }
   }
 
   Future<void> _apiFoodSearch(String text) async {
     setState((){_isLoading = true;});
-    final uri = Uri.parse('https://search.openfoodfacts.org/search?q=$text&page_size=500&fields=nutriments,quantity,product_name,product_name_en,image_small_url,image_url');
+    final uri = Uri.parse('https://search.openfoodfacts.org/search?q=$text&page_size=500&fields=nutriments,quantity,product_name,product_name_en,image_small_url,image_url,code');
     final response = await http.get(uri);
     String responseBody = '';
     if (response.statusCode == 200) {
@@ -311,16 +366,20 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
     }
       final Map<String, dynamic> decodedData = json.decode(responseBody);
       final List<dynamic> products = decodedData['hits'] ?? [];
+      List<FoodItem> searchedFoods = [];
       
-      List<FoodItem> searchedFoods = products.map((product) {
+      for (var product in products) {
         try {
         //print("${product['product_name']} / ${product['product_name_en']} / ${product['quantity']}");
         double grams;
+        bool densityRequired = true;
         if (product['quantity'] == null){
           grams = 100;
         }
         else{
-          grams = _toGrams(product['quantity']);
+          List gramsOutput = _toGrams(product['quantity']);
+          grams = gramsOutput[0];
+          densityRequired = gramsOutput[2];
         }
         double g100Mult = grams/100;
 
@@ -373,7 +432,27 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
         if (image_small_url == ""){
           image_small_url = img_url;
         }
-        FoodItem currFoodItem = FoodItem(
+        num code = -1;
+        if (product['code'] != null)
+        {
+          code = num.parse(product['code']);
+        }
+        final existingFood = await isar.savedFoods
+                .filter()
+                .normalized_nameEqualTo(_normalizeText(name))
+                .serving_sizeEqualTo(serving_size)
+                .gramsEqualTo(grams)
+                .caloriesEqualTo(calories.toDouble())
+                .carbsEqualTo(carbs.toDouble())
+                .fatsEqualTo(fats.toDouble())
+                .proteinEqualTo(proteins.toDouble())
+                .sugarEqualTo(sugars.toDouble())
+                .findFirst();
+        if (existingFood != null){
+          searchedFoods.add(FoodItem.fromJson(existingFood.toJson()));
+        }
+        else{
+          FoodItem currFoodItem = FoodItem(
                   name: name,
                   serving_size: serving_size,
                   grams: grams,
@@ -385,13 +464,17 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
                   normalized_name: _normalizeText(name),
                   image_small_url: image_small_url,
                   img_url: img_url,
+                  code: code,
+                  //Assumed 1ml to 1g
+                  density: 1.0,
+                  densityRequired: densityRequired,
                   );
-        return currFoodItem;
+          searchedFoods.add(currFoodItem);
+        }
         } catch(e) {
           print("Error parsing api response: $e");
-          return FoodItem(name: "_NO_NAME_", serving_size:"_NO_SERVING_SIZE", grams: -1, calories: -1, carbs: -1, fats: -1, protein: -1, sugar: -1, normalized_name: "NO_NORMALIZED_NAME");
         }
-      }).toList();
+      }
       
       List<FoodItem> searchedFoodsAllElements = [];
       List<FoodItem> firstHalfFoods = [];
