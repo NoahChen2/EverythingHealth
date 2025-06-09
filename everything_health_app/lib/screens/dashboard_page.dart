@@ -16,16 +16,19 @@ class DashboardPage extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Material(
-                child: InkWell(
-                  onTap: () => {print("Dashboard tapped")},
-                  child: Text(
-                    "Everything Health Dashboard",
-                    style: TextStyle(
-                      fontSize: 20,
-                      color: const Color.fromARGB(255, 219, 219, 219), // Use theme color
-                      decoration: TextDecoration.none, // Default
-                    )
+              Expanded(
+                child: Material(
+                  child: InkWell(
+                    onTap: () => {print("Dashboard tapped")},
+                    child: Text(
+                      "Everything Health Dashboard",
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: const Color.fromARGB(255, 110, 110, 110), // Use theme color
+                        decoration: TextDecoration.none, // Default
+                        overflow: TextOverflow.clip,
+                      )
+                    ),
                   ),
                 ),
               )

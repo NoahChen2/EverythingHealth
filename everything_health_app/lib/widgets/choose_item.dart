@@ -5,6 +5,7 @@ import 'package:everything_health_app/screens/log_food_page.dart';
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/services.dart';
+import 'dart:async';
 
 class ChooseFoodItem extends StatefulWidget {
   final FoodItem food;
@@ -92,7 +93,7 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
 
   void _scaleUpFoods(num scale) {
     setState(() {
-      for (int i = 2; i < _currFoodVals!.length - 3; i++) {
+      for (int i = 2; i < _currFoodVals!.length - 5; i++) {
         _currFoodVals![i] *= scale;
       }
     });
@@ -112,6 +113,7 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
       normalized_name: _normalizeText(_currFoodVals![10]),
       densityRequired: _currFoodVals![11],
       time: DateTime.now().toUtc().difference(DateTime.utc(1970, 1, 1)).inSeconds,
+      servings: _currFoodVals![12],
     );
     HistoryFood newEntry = HistoryFood.fromJson(tempFood.toJson());
     await isar.writeTxn(() async {
@@ -136,6 +138,7 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
       density: _currFoodVals![8],
       normalized_name: _normalizeText(_currFoodVals![10]),
       densityRequired: _currFoodVals![11],
+      servings: _currFoodVals![12],
     );
     print('Saving... ${tempFood.name}');
     SavedFood newEntry = SavedFood.fromJson(tempFood.toJson());
@@ -187,6 +190,7 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
         currFood.normalized_name,
         currFood.name,
         currFood.densityRequired,
+        currFood.servings,
       ];
       ifSetCurrFoodVals = true;
     }
@@ -250,7 +254,10 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
       return Stack(children: [
         GestureDetector(
             onTap: () {
-              setState(() => _editSelection = [-1]); 
+              setState(() { 
+                _editSelection = [-1];
+                _editing = false;
+              }); 
               widget.close();},
             child: Container(
               decoration:
@@ -260,7 +267,7 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
           Center(
             child: Container(
                 height: pageHeight * .8,
-                width: pageWidth * .8,
+                width: pageWidth * .9,
                 clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
                     color: Colors.red,
@@ -270,14 +277,14 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
                     Stack(children: [
                       Container(
                           height: 125,
-                          width: pageWidth * .8,
+                          width: pageWidth * .9,
                           decoration: BoxDecoration(color: currFood.color)),
                       Row(children: [
                         GestureDetector(
                             onTap: () => _handleEnlargeImage(),
                             child: Container(
                               height: 150,
-                              width: pageWidth * .3,
+                              width: pageWidth * .4,
                               decoration: BoxDecoration(
                                   color: currFood.color,
                                   borderRadius: BorderRadius.vertical(
@@ -338,9 +345,9 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
                                           child: Icon(Icons.bookmark),
                                         ),
                                         GestureDetector(
-											onTap: () => _addFood(),
-											child: Icon(Icons.add),
-										),
+                                          onTap: () => _addFood(),
+                                          child: Icon(Icons.add),
+                                        ),
                                       ])),
                               Container(
                                   height: 100,
@@ -396,6 +403,16 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
                                   currFoodVals: _currFoodVals!,
                                   scaleFunc: _scaleUpFoods)
                               : SizedBox.shrink(),
+                          ModifiableFoodItemData(
+                              lbl: "Servings",
+                              qty: null,
+                              amt: _currFoodVals![12],
+                              uts: "",
+                              editValue: _editSelection,
+                              editSpecific: _toggleEditSpecific,
+                              currFood: currFood,
+                              currFoodVals: _currFoodVals!,
+                              scaleFunc: _scaleUpFoods),
                           ModifiableFoodItemData(
                               lbl: "Calories",
                               qty: null,
@@ -455,29 +472,30 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
           ),
           enlargedPic,
           Positioned(
-			top: pageHeight * .9 - 75,
-			left: pageWidth * .5 - 150/2,
+			top: pageHeight * .9 - 50,
+			left: pageWidth * .5 - 100/2,
             child: GestureDetector(
 				onTap: _editing ? () => _toggleEditAll() : () => _addFood(),
 				child: Container(
-					height: 75,
-					width: 150,
+					height: 50,
+					width: 100,
 					decoration: BoxDecoration(
-						color: Colors.orange,
+						color: _editing? Colors.green : Colors.orange,
 						borderRadius: BorderRadius.vertical(top: Radius.circular(5))
 					),
-					child: _editing ? Center(child: Text("Save"),) : Center(child: Text("Add"),)
+					child: _editing ? Center(child: Text("Apply"),) : Center(child: Text("Add"),)
 				),
 			),
           ),
           Positioned(
-              top: pageHeight * .95 - 30 / 2,
-              left: pageWidth * .5 - 30 / 2,
+              top: pageHeight * .95 - 50 / 2,
+              left: pageWidth * .5 - 50 / 2,
               child: GestureDetector(
                 onTap: () {
                   setState(() { 
                     _enlargeImage = false;
-                    _editSelection = [-1];});
+                    _editSelection = [-1];
+                    _editing = false;});
                   widget.close();
                 },
                 child: Container(
@@ -538,6 +556,10 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
     "Protein",
     "Sugar",
     "Density",
+    "",
+    "",
+    "",
+    "Servings",
   ];
   static const List<String> _attributesName = [
     "",
@@ -548,7 +570,11 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
     "fats",
     "protein",
     "sugar",
-    "density"
+    "density",
+    "",
+    "",
+    "",
+    "servings",
   ];
   static const weightUnitsPerGram = {
     'g': 1.0,
@@ -611,7 +637,7 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
     units = widget.uts; // Initialize current units
     currZeroScale = amount;
     densityScale = widget.currFood.density;
-    scaleOtherUnits = widget.lbl == "Serving Size";
+    scaleOtherUnits = widget.lbl == "Serving Size" || widget.lbl == "Servings";
     _currFoodVals = widget.currFoodVals;
     _scaleUpFoods = widget.scaleFunc;
     _updateEditingStateAndText();
@@ -671,9 +697,7 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
   }
 
   void _resetToDefaultValue() {
-    Function func = widget.editSpecific(currEditIndex!);
     setState(() {
-      func();
       if (units != startingUnits) {
         _changeUnits(normalizeUnit(startingUnits!));
         units = startingUnits;
@@ -683,6 +707,9 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
       if (attributeID == "serving_size") {
         if (scaleOtherUnits == true) _scaleUpFoods!(startingAmount! / amount!);
         _currFoodVals[currEditIndex!] = "$startingAmount $units";
+      }else if (attributeID == "servings") {
+        if (scaleOtherUnits == true) _scaleUpFoods!(startingAmount! / amount!);
+        _currFoodVals[currEditIndex!] = startingAmount;
       } else if (attributeID == "calories") {
         if (units == "kJ") {
           _currFoodVals[currEditIndex!] = startingAmount! / 4.184;
@@ -692,49 +719,67 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
       }
       amount = startingAmount;
       _isCurrentlyEditing = false;
-      _textController.text = (_currFoodVals[11] &&
+      if (_currFoodVals[11] &&
                   attributeID != "serving_size" &&
-                  attributeID != "density"
-              ? startingAmount! * _currFoodVals[8]
-              : startingAmount!)
-          .toStringAsFixed(1);
+                  attributeID != "density" &&
+                  attributeID != "servings")
+      { 
+        _textController.text =  (startingAmount! * _currFoodVals[8]).toStringAsFixed(1);
+      }else{
+        _textController.text =  startingAmount!.toStringAsFixed(1);
+      }
       currZeroScale = startingAmount;
     });
   }
 
+  // Debounce timer for textbox changes
+  Timer? _debounce;
+
   void _handleTextboxChange(String str) {
     str = str.replaceAll(',', '.');
     _isCurrentlyEditing = true;
-    setState(() {
-      try {
-        num newValue = double.parse(str);
-        if (attributeID == "serving_size") {
-          if (scaleOtherUnits == true) _scaleUpFoods!(newValue / amount!);
-          _currFoodVals[currEditIndex!] = "$newValue $units";
-        } else if (attributeID == "calories") {
-          if (units == "kJ") {
-            _currFoodVals[currEditIndex!] = newValue / 4.184;
+
+    // Cancel any existing timer
+    _debounce?.cancel();
+
+    // Start a new debounce timer
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      setState(() {
+        try {
+          num newValue = double.parse(str);
+          if (newValue == 0 && (attributeID == "serving_size" || attributeID == "servings" )) {
+            newValue = .00000000000017;
           }
-        } else {
-          _currFoodVals[currEditIndex!] = newValue;
-        }
-        if (attributeID == "density") {
-          _scaleUpFoods!(1.0);
-        }
-        amount = newValue;
-      } catch (e) {
-        if (str == "") {
+          if (attributeID == "serving_size") {
+            if (scaleOtherUnits == true) _scaleUpFoods!(newValue / amount!);
+            _currFoodVals[currEditIndex!] = "$newValue $units";
+          }
+          else if (attributeID == 'servings') {
+            if (scaleOtherUnits == true) _scaleUpFoods!(newValue / amount!);
+            _currFoodVals[currEditIndex!] = newValue;
+          } else if (attributeID == "calories") {
+            if (units == "kJ") {
+              _currFoodVals[currEditIndex!] = newValue / 4.184;
+            }
+          } else {
+            _currFoodVals[currEditIndex!] = newValue;
+          }
+          if (attributeID == "density") {
+            _scaleUpFoods!(1.0);
+          }
+          amount = newValue;
+        } catch (e) {
           return;
         }
-        amount = startingAmount;
-        _textController.text = (_currFoodVals[11] &&
-                    attributeID != "serving_size" &&
-                    attributeID != "density"
-                ? startingAmount! * _currFoodVals[8]
-                : startingAmount!)
-            .toStringAsFixed(1);
-      }
+      });
     });
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _textController.dispose(); // Dispose of the controller
+    super.dispose();
   }
 
   void _setZeroScale() {
@@ -810,19 +855,13 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
     });
   }
 
-  @override
-  void dispose() {
-    _textController.dispose(); // Dispose of the controller
-    super.dispose();
-  }
-
   List seperateAmtAndUnits(String str) {
     String units = str
-        .replaceFirst(RegExp(r'[\d.,/]+'), ' ')
+        .replaceFirst(RegExp(r'[\d.,+eE+-]+'), ' ')
         .replaceAll(RegExp(r'[\s]+'), ' ')
         .trim()
         .toLowerCase();
-    String doublePart = str.replaceAll(RegExp(r'[^\d.,\s]+'), ' ').trim();
+    String doublePart = str.replaceAll(RegExp(r'[^\d.,+eE+-]+'), ' ').trim();
     List<String> mathStuff = str
         .replaceAll(',', '.')
         .replaceAll(RegExp(r'[^\d.,/\sx*]'), ' ')
@@ -860,9 +899,7 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
         (widget.editValue.isNotEmpty && widget.editValue[0] == 0);
     String label = widget.lbl;
     String? quantity = widget.qty;
-    amount = amount == null
-        ? widget.amt
-        : (amount! * 100000).roundToDouble() / 100000;
+    amount = amount ?? widget.amt;
 
     !currEditing ? _setZeroScale() : null;
     if ((amount == null && quantity != null) ||
@@ -889,14 +926,26 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
           currFoodVals: _currFoodVals,
           scaleFunc: widget.scaleFunc);
     }
-    !_isCurrentlyEditing
-        ? _textController.text = (_currFoodVals[11] &&
-                    attributeID != "serving_size" &&
-                    attributeID != "density"
-                ? amount! * _currFoodVals[8]
-                : amount!)
-            .toStringAsFixed(1)
-        : null;
+    if (currZeroScale != null && currZeroScale! <= .00001){
+      if (attributeID == "serving_size"){
+        currZeroScale = seperateAmtAndUnits(widget.currFood[attributeID!])[0];
+      }
+      else{
+        currZeroScale = widget.currFood[attributeID!];
+      }
+    }
+    if (!_isCurrentlyEditing){
+      if (_currFoodVals[11] &&
+                  attributeID != "serving_size" &&
+                  attributeID != "density" &&
+                  attributeID != "servings")
+      { 
+        _textController.text =  (amount! * _currFoodVals[8]).toStringAsFixed(1);
+        
+      }else{
+        _textController.text =  amount!.toStringAsFixed(1);
+      }
+    }
     String strippedUnits = units!
             .split(" ")[0]
             .trim()
@@ -913,51 +962,44 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
         break;
       }
     }
-
-    Widget attributeDisplayDefault = Row(spacing: 5, children: [
-      Container(
-        color: Colors.red,
-        alignment: Alignment.centerLeft,
-        child: Text("$label:", overflow: TextOverflow.ellipsis),
+    Widget attributeDisplayDefault = Row(children: [
+      Expanded(
+        child: Text("$label:", overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 12)),
       ),
-      Spacer(),
-      Container(
-          width: 150,
-          child: Text(
-              "${((_currFoodVals[11] && attributeID != "serving_size" && attributeID != "density" ? amount! * _currFoodVals[8] : amount!).toStringAsFixed(1))} ${units!}",
-              overflow: TextOverflow.ellipsis)),
-      Container(
-          child: GestureDetector(
-        onTap: widget.editSpecific(currEditIndex!),
-        child: Icon(Icons.edit),
-      ))
-    ]);
+      Expanded(
+        child: Text(
+          "${((_currFoodVals[11] && attributeID != "serving_size" && attributeID != "density"  &&
+          attributeID != "servings"? amount! * _currFoodVals[8] : amount!).toStringAsFixed(1))} ${units!}",
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.end,
+          style: TextStyle(fontSize: 12)),
+      ),
+      ]);
 
     Widget attributeDisplayEdit = Column(
       children: [
-        Row(spacing: 5, children: [
-          Container(
-            alignment: Alignment.centerLeft,
-            child: Text("$label:", overflow: TextOverflow.ellipsis),
+        Row(children: [
+          Expanded(
+            child: Text("$label:", overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12), textAlign: TextAlign.start,),
           ),
-          Spacer(),
-          Container(
+          SizedBox(
             width: 50,
             child: TextField(
               keyboardType: TextInputType.numberWithOptions(decimal: true),
               controller: _textController,
               onChanged: _handleTextboxChange,
-              style: TextStyle(overflow: TextOverflow.ellipsis),
+              style: TextStyle(overflow: TextOverflow.ellipsis, fontSize: 12),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[\d.,]*'))
               ],
             ),
           ),
           Container(
-            width: 100,
             child: "calories" == attributeID
                 ? DropdownButton<String>(
                     value: units,
+                    style: TextStyle(fontSize: 12, overflow: TextOverflow.clip, color: Colors.black),
                     onChanged: (String? newValue) => _changeUnits(newValue),
                     items: ["kcal", "kJ"]
                         .map((unit) => DropdownMenuItem<String>(
@@ -969,6 +1011,7 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
                 : normalizedUnit != "" && "serving_size" == attributeID
                     ? DropdownButton<String>(
                         value: normalizedUnit,
+                        style: TextStyle(fontSize: 12, overflow: TextOverflow.clip, color: Colors.black),
                         onChanged: (String? newValue) => _changeUnits(newValue),
                         items: [
                           ...weightUnitsPerGram.keys
@@ -983,17 +1026,15 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
                                   ))
                         ],
                       )
-                    : Text(units!),
+                    : Text(units!, style: TextStyle(fontSize: 12, overflow: TextOverflow.clip)),
+          ),
+          SizedBox(
+            width: 5
           ),
           GestureDetector(
             onTap: _resetToDefaultValue,
             child: Icon(Icons.undo),
           ),
-          Container(
-              child: GestureDetector(
-            onTap: widget.editSpecific(currEditIndex!),
-            child: Icon(Icons.check),
-          ))
         ]),
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
@@ -1014,7 +1055,7 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
                     : num < currZeroScale! / 4 && num != 0
                         ? currZeroScale = num
                         : null),
-            value: ((amount ?? 0.0).toDouble()).clamp(0.0,
+            value: ((amount == .00000000000017 ? 0.0: amount ?? 0.0).toDouble()).clamp(0.0,
                 (currZeroScale! >= 0 ? currZeroScale!.toDouble() * 2.0 : 0.0)),
             min: 0.0,
             max: (currZeroScale == 0 || currZeroScale == null)
@@ -1023,17 +1064,24 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
             divisions: 1000,
             label: (_currFoodVals[11] &&
                         attributeID != "serving_size" &&
-                        attributeID != "density"
+                        attributeID != "density" &&
+                        attributeID != "servings"
                     ? amount! * _currFoodVals[8]
                     : amount!)
                 .toStringAsFixed(1),
             onChanged: (double newValue) {
               setState(() {
+                if ((newValue == 0 && (attributeID == "serving_size" || attributeID == "servings" ))){
+                  newValue = .00000000000017;
+                }
                 if (attributeID == "serving_size") {
                   if (scaleOtherUnits == true) {
                     _scaleUpFoods!(newValue / amount!);
                   }
                   _currFoodVals[currEditIndex!] = "$newValue $units";
+                }else if (attributeID == 'servings') {
+                  if (scaleOtherUnits == true) _scaleUpFoods!(newValue / amount!);
+                  _currFoodVals[currEditIndex!] = newValue;
                 } else if (attributeID == "calories") {
                   if (units == "kJ") {
                     _currFoodVals[currEditIndex!] = newValue / 4.184;
@@ -1047,7 +1095,8 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
                 amount = newValue;
                 _textController.text = (_currFoodVals[11] &&
                             attributeID != "serving_size" &&
-                            attributeID != "density"
+                            attributeID != "density"  &&
+                  attributeID != "servings"
                         ? amount! * _currFoodVals[8]
                         : amount!)
                     .toStringAsFixed(1);
@@ -1055,7 +1104,7 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
             },
           ),
         ),
-        attributeID == "serving_size"
+        attributeID == "serving_size" || attributeID == "servings"
             ? Row(
                 children: [
                   Checkbox(
@@ -1066,7 +1115,7 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
                       });
                     },
                   ),
-                  Text("Scale other attributes"),
+                  Expanded(child: Text("Scale other attributes", style: TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)),
                 ],
               )
             : SizedBox.shrink(),
@@ -1077,5 +1126,32 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
       padding: EdgeInsets.all(10),
       child: currEditing ? attributeDisplayEdit : attributeDisplayDefault,
     );
+  }
+}
+
+class GraphFoodItemDataDisplay extends StatefulWidget{
+  final List currFoodVals;
+
+  const GraphFoodItemDataDisplay({
+    super.key,
+    required this.currFoodVals,
+  });
+
+  @override
+  State<GraphFoodItemDataDisplay> createState() => _GraphFoodItemDataDisplayState();
+}
+
+class _GraphFoodItemDataDisplayState extends State<GraphFoodItemDataDisplay> {
+  List? currFoodVals;
+
+  @override
+  void initState(){
+    super.initState();
+    currFoodVals = widget.currFoodVals;
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    return Container();
   }
 }

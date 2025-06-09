@@ -177,13 +177,13 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
           try {
             final String normalizedName = jsonMap['normalized_name'] ?? '';
             final String serving_size = jsonMap['serving_size'] ?? '';
-            final double grams = jsonMap['grams'] ?? '';
-            final double calories = jsonMap['calories'] ?? '';
-            final double carbs = jsonMap['carbs'] ?? '';
-            final double fats = jsonMap['fats'] ?? '';
-            final double protein = jsonMap['protein'] ?? '';
-            final double sugar = jsonMap['sugar'] ?? '';
-            
+            final double grams = jsonMap['grams'] ?? 0;
+            final double calories = jsonMap['calories'] ?? 0;
+            final double carbs = jsonMap['carbs'] ?? 0;
+            final double fats = jsonMap['fats'] ?? 0;
+            final double protein = jsonMap['protein'] ?? 0;
+            final double sugar = jsonMap['sugar'] ?? 0;
+            final double servings = jsonMap['servings'] ?? 1.0;
             
             // 3. Perform the Isar search for each item, just like in _apiFoodSearch
             final existingFood = await isar.savedFoods
@@ -196,6 +196,7 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
                 .fatsEqualTo(fats)
                 .proteinEqualTo(protein)
                 .sugarEqualTo(sugar)
+                .servingsEqualTo(servings)
                 .findFirst();
 
             if (existingFood != null) {
@@ -437,6 +438,11 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
         {
           code = num.parse(product['code']);
         }
+        num servings = 1;
+        if (product['servings'] != null)
+        {
+          servings = num.parse(product['servings']);
+        }
         final existingFood = await isar.savedFoods
                 .filter()
                 .normalized_nameEqualTo(_normalizeText(name))
@@ -447,6 +453,7 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
                 .fatsEqualTo(fats.toDouble())
                 .proteinEqualTo(proteins.toDouble())
                 .sugarEqualTo(sugars.toDouble())
+                .servingsEqualTo(servings.toDouble())
                 .findFirst();
         if (existingFood != null){
           searchedFoods.add(FoodItem.fromJson(existingFood.toJson()));

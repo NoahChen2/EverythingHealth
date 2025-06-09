@@ -19,15 +19,17 @@ Widget buildNavItem({ // Renamed from _buildNavItem and made public
         alignment: Alignment.bottomCenter,
         child: Padding(
           padding: const EdgeInsets.symmetric(
-              vertical: 8.0, horizontal: 12.0),
+              vertical: 8.0, horizontal: 0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Icon(icon, color: colorUsed, size: 24),
               const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(fontSize: 10, color: colorUsed),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(fontSize: 10, color: colorUsed, overflow: TextOverflow.clip, fontWeight: FontWeight.w700),
+                ),
               ),
             ],
           ),

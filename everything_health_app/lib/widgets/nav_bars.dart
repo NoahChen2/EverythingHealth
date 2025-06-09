@@ -27,13 +27,13 @@ class MyBottomNavigationBar extends StatelessWidget {
         color: Colors.transparent, // Use transparent for Material
         child: SizedBox(
           width: double.infinity,
-          height: barHeight * 2,
+          height: barHeight * 1.5,
           child: LayoutBuilder(builder: (context, constraints) {
             double circleDiameter = constraints.maxWidth / 5;
             return Stack(
               children: [
                 Transform.translate(
-                  offset: Offset(0, barHeight),
+                  offset: Offset(0, barHeight * .5),
                   child: Container(
                     height: barHeight,
                     color: barColor,

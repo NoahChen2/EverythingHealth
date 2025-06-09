@@ -87,13 +87,18 @@ const HistoryFoodSchema = CollectionSchema(
       name: r'serving_size',
       type: IsarType.string,
     ),
-    r'sugar': PropertySchema(
+    r'servings': PropertySchema(
       id: 14,
+      name: r'servings',
+      type: IsarType.double,
+    ),
+    r'sugar': PropertySchema(
+      id: 15,
       name: r'sugar',
       type: IsarType.double,
     ),
     r'time': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'time',
       type: IsarType.long,
     )
@@ -173,8 +178,9 @@ void _historyFoodSerialize(
   writer.writeString(offsets[11], object.normalized_name);
   writer.writeDouble(offsets[12], object.protein);
   writer.writeString(offsets[13], object.serving_size);
-  writer.writeDouble(offsets[14], object.sugar);
-  writer.writeLong(offsets[15], object.time);
+  writer.writeDouble(offsets[14], object.servings);
+  writer.writeDouble(offsets[15], object.sugar);
+  writer.writeLong(offsets[16], object.time);
 }
 
 HistoryFood _historyFoodDeserialize(
@@ -198,8 +204,9 @@ HistoryFood _historyFoodDeserialize(
     normalized_name: reader.readString(offsets[11]),
     protein: reader.readDouble(offsets[12]),
     serving_size: reader.readString(offsets[13]),
-    sugar: reader.readDouble(offsets[14]),
-    time: reader.readLong(offsets[15]),
+    servings: reader.readDoubleOrNull(offsets[14]) ?? 1,
+    sugar: reader.readDouble(offsets[15]),
+    time: reader.readLong(offsets[16]),
   );
   return object;
 }
@@ -240,8 +247,10 @@ P _historyFoodDeserializeProp<P>(
     case 13:
       return (reader.readString(offset)) as P;
     case 14:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readDoubleOrNull(offset) ?? 1) as P;
     case 15:
+      return (reader.readDouble(offset)) as P;
+    case 16:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1703,6 +1712,70 @@ extension HistoryFoodQueryFilter
     });
   }
 
+  QueryBuilder<HistoryFood, HistoryFood, QAfterFilterCondition> servingsEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'servings',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryFood, HistoryFood, QAfterFilterCondition>
+      servingsGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'servings',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryFood, HistoryFood, QAfterFilterCondition>
+      servingsLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'servings',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryFood, HistoryFood, QAfterFilterCondition> servingsBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'servings',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
   QueryBuilder<HistoryFood, HistoryFood, QAfterFilterCondition> sugarEqualTo(
     double value, {
     double epsilon = Query.epsilon,
@@ -2000,6 +2073,18 @@ extension HistoryFoodQuerySortBy
     });
   }
 
+  QueryBuilder<HistoryFood, HistoryFood, QAfterSortBy> sortByServings() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'servings', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HistoryFood, HistoryFood, QAfterSortBy> sortByServingsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'servings', Sort.desc);
+    });
+  }
+
   QueryBuilder<HistoryFood, HistoryFood, QAfterSortBy> sortBySugar() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'sugar', Sort.asc);
@@ -2211,6 +2296,18 @@ extension HistoryFoodQuerySortThenBy
     });
   }
 
+  QueryBuilder<HistoryFood, HistoryFood, QAfterSortBy> thenByServings() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'servings', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HistoryFood, HistoryFood, QAfterSortBy> thenByServingsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'servings', Sort.desc);
+    });
+  }
+
   QueryBuilder<HistoryFood, HistoryFood, QAfterSortBy> thenBySugar() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'sugar', Sort.asc);
@@ -2330,6 +2427,12 @@ extension HistoryFoodQueryWhereDistinct
     });
   }
 
+  QueryBuilder<HistoryFood, HistoryFood, QDistinct> distinctByServings() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'servings');
+    });
+  }
+
   QueryBuilder<HistoryFood, HistoryFood, QDistinct> distinctBySugar() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'sugar');
@@ -2434,6 +2537,12 @@ extension HistoryFoodQueryProperty
   QueryBuilder<HistoryFood, String, QQueryOperations> serving_sizeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'serving_size');
+    });
+  }
+
+  QueryBuilder<HistoryFood, double, QQueryOperations> servingsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'servings');
     });
   }
 

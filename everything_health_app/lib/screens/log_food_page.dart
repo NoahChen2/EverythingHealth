@@ -73,18 +73,13 @@ class _LogFoodPageState extends State<LogFoodPage> {
           colorUsed: widget.logFoodIndex == 0 ? selectedColor : nonSelectedColor,
           onTap: () => widget.onLogFoodSelection(0)),
       buildNavItem(
-          icon: Icons.qr_code_scanner,
-          label: "Barcode",
-          colorUsed: widget.logFoodIndex == 1 ? selectedColor : nonSelectedColor,
-          onTap: () => widget.onLogFoodSelection(1)),
-      buildNavItem(
           icon: Icons.camera,
-          label: "Photo",
+          label: "Scan",
           colorUsed: widget.logFoodIndex == 2 ? selectedColor : nonSelectedColor,
           onTap: () => widget.onLogFoodSelection(2)),
       buildNavItem(
-          icon: Icons.history,
-          label: "History",
+          icon: Icons.app_registration_rounded,
+          label: "Manual",
           colorUsed: widget.logFoodIndex == 3 ? selectedColor : nonSelectedColor,
           onTap: () => widget.onLogFoodSelection(3)),
       buildNavItem(
@@ -97,7 +92,6 @@ class _LogFoodPageState extends State<LogFoodPage> {
     var logFoodPagesContent = [ // Specific content for each sub-page
       SearchFoodPage(addingFoodFunc: _addingFoodFunc),
       Container(color: Colors.blueAccent, child: const Center(child: Text("Scan Barcode Content"))),
-      Container(color: const Color.fromARGB(255, 255, 68, 230), child: const Center(child: Text("Take Photo Content"))),
       Container(color: Colors.orangeAccent, child: const Center(child: Text("History Content"))),
       Container(color: Colors.blueGrey, child: const Center(child: Text("Favorites Content"))),
     ];
@@ -155,7 +149,8 @@ class FoodItem {
   String img_url;
   num density;
   bool densityRequired;
-  int time;
+  num time;
+  num servings;
 
   FoodItem({
     required this.name,
@@ -175,6 +170,7 @@ class FoodItem {
     this.image_small_url = "",
     this.img_url = "",
     this.time = 0,
+    this.servings = 1,
   }) : color = color ?? HSLColor.fromAHSL(1.0, random.nextInt(360).toDouble(), .38, .50).toColor(); // Provide a default color if none is given
   
   void operator []=(String key, dynamic value) {
@@ -213,11 +209,56 @@ class FoodItem {
         img_url = value;
       case 'time':
         time = value;
+      case 'servings':
+        servings = value;
       default:
         throw ArgumentError('Unknown attribute: $key');
     }
   }
   
+  dynamic operator [] (String key) {
+    switch (key) {
+      case 'name':
+        return name;
+      case 'serving_size':
+        return serving_size;
+      case 'grams':
+        return grams;
+      case 'calories':
+        return calories;
+      case 'carbs':
+        return carbs;
+      case 'fats':
+        return fats;
+      case 'protein':
+        return protein;
+      case 'sugar':
+        return sugar;
+      case 'normalized_name':
+        return normalized_name;
+      case 'densityRequired':
+        return densityRequired;
+      case 'density':
+        return density;
+      case 'code':
+        return code;
+      case 'id':
+        return id;
+      case 'color':
+        return color;
+      case 'image_small_url':
+        return image_small_url;
+      case 'img_url':
+        return img_url;
+      case 'time':
+        return time;
+      case 'servings':
+        return servings;
+      default:
+        throw ArgumentError('Unknown attribute: $key');
+    }
+  }
+
   factory FoodItem.fromJson(Map<String, dynamic> json) {
     return FoodItem(
       name: json['name'] ?? 'Unknown Food',
@@ -237,6 +278,7 @@ class FoodItem {
       image_small_url: json['image_small_url'] ?? json['image_url'] ?? "NO_IMAGE_FOUND",
       img_url: json['image_url'] ?? json['image_small_url'] ?? "NO_IMAGE_FOUND",
       time: json['time'] ?? 0,
+      servings: json['servings'] ?? 1,
     );
   }
 
@@ -264,6 +306,7 @@ class FoodItem {
       'image_small_url': image_small_url,
       'img_url': img_url,
       'time': time,
+      'servings': servings,
     };
   }
 }
