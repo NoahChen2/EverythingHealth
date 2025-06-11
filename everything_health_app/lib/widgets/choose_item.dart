@@ -22,6 +22,7 @@ class ChooseFoodItem extends StatefulWidget {
 
 class _ChooseFoodItemState extends State<ChooseFoodItem> {
   late TextEditingController _nameTextController;
+  late TextEditingController _codeTextController;
   bool _enlargeImage = false;
   bool _editing = false;
   List<int> _editSelection = [-1];
@@ -29,12 +30,14 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
   late FoodItem currFood;
   bool ifSetCurrFoodVals = false;
   List? _currFoodVals;
+  bool viewNutritionInfo = false;
 
   @override
   void initState() {
     super.initState();
     currFood = widget.food;
     _nameTextController = TextEditingController();
+    _codeTextController = TextEditingController();
   }
 
   //BEFORE OTHER METHODS AFTER INITSTATE @IMPORTANT
@@ -54,6 +57,12 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
           widget.food.image_small_url != "NO_IMAGE_FOUND") {
         _enlargeImage = !_enlargeImage;
       }
+    });
+  }
+
+  void _toggleViewNutritionInfo() {
+    setState((){
+      viewNutritionInfo = !viewNutritionInfo;
     });
   }
 
@@ -93,7 +102,7 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
 
   void _scaleUpFoods(num scale) {
     setState(() {
-      for (int i = 2; i < _currFoodVals!.length - 5; i++) {
+      for (int i = 2; i < _currFoodVals!.length - 6; i++) {
         _currFoodVals![i] *= scale;
       }
     });
@@ -114,6 +123,7 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
       densityRequired: _currFoodVals![11],
       time: DateTime.now().toUtc().difference(DateTime.utc(1970, 1, 1)).inSeconds,
       servings: _currFoodVals![12],
+      code: _currFoodVals![13],
     );
     HistoryFood newEntry = HistoryFood.fromJson(tempFood.toJson());
     await isar.writeTxn(() async {
@@ -139,6 +149,7 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
       normalized_name: _normalizeText(_currFoodVals![10]),
       densityRequired: _currFoodVals![11],
       servings: _currFoodVals![12],
+      code: _currFoodVals![13],
     );
     print('Saving... ${tempFood.name}');
     SavedFood newEntry = SavedFood.fromJson(tempFood.toJson());
@@ -153,6 +164,20 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
       _currFoodVals![10] = str;
     });
   }
+
+  void _handleCodeChange(String str) {
+    if (str == "")
+    {
+      return;
+    }
+    setState((){
+      try{
+        _currFoodVals![13] = int.parse(str);
+      }
+      // ignore: empty_catches
+      catch(e){}
+    });
+  }
   
   static String _normalizeText(String text) {
     String normalized = text.toLowerCase();
@@ -161,9 +186,18 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
     return normalized;
   }
 
+  void _resetCode(){
+    _codeTextController.text = widget.food.code.toStringAsFixed(0) == "-1" ? "":widget.food.code.toStringAsFixed(0);
+    _currFoodVals![13] = widget.food.code;
+  }
+
+  void _scanCode(){
+    print("TODO: SCANNING...");
+  }
   @override
   void dispose() {
     _nameTextController.dispose();
+    _codeTextController.dispose();
     super.dispose();
   }
 
@@ -191,6 +225,7 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
         currFood.name,
         currFood.densityRequired,
         currFood.servings,
+        currFood.code,
       ];
       ifSetCurrFoodVals = true;
     }
@@ -250,7 +285,10 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
                       child: Icon(Icons.arrow_back_ios, color: Colors.white)))),
         ]);
       }
-      if (!_editing){_nameTextController.text = _currFoodVals![10];}
+      if (!_editing){
+        _nameTextController.text = _currFoodVals![10];
+        _codeTextController.text = _currFoodVals![13].toStringAsFixed(0) == "-1" ? "": _currFoodVals![13].toStringAsFixed(0);
+      }
       return Stack(children: [
         GestureDetector(
             onTap: () {
@@ -349,29 +387,59 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
                                           child: Icon(Icons.add),
                                         ),
                                       ])),
-                              Container(
+                              SizedBox(
                                   height: 100,
                                   width: pageWidth * .5,
-                                  padding: EdgeInsets.all(5),
                                   child: Center(
                                     child: _editing ? 
-                                    TextField(
-                                      keyboardType: TextInputType.numberWithOptions(decimal: true),
-                                      controller: _nameTextController,
-                                      onChanged: _handleNameChange,
-                                      style: TextStyle(overflow: TextOverflow.ellipsis),
+                                    Container(
+                                      width: pageWidth * .5,
+                                      padding: EdgeInsets.all(5),
+                                      child: TextField(
+                                        keyboardType: TextInputType.numberWithOptions(decimal: true),
+                                        controller: _nameTextController,
+                                        onChanged: _handleNameChange,
+                                        style: TextStyle(overflow: TextOverflow.ellipsis),
+                                      ),
                                     )
-                                    : AutoSizeText(
-                                      _currFoodVals![10],
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                          fontSize: 30,
-                                          fontWeight: FontWeight.w600),
-                                      maxLines: 10,
-                                      overflow: TextOverflow.ellipsis,
+                                    : Container(
+                                      padding: EdgeInsets.all(5),
+                                      child: AutoSizeText(
+                                        _currFoodVals![10],
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                            fontSize: 30,
+                                            fontWeight: FontWeight.w600),
+                                        maxLines: 10,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
                                   )),
-                              Text(currFood.code.toString()),
+                              Expanded(
+                                child: Center(
+                                  child: Row(
+                                      spacing: 5,
+                                      children: 
+                                        !_editing ? [Text(_currFoodVals![13] == -1 ? "No Barcode Found":_currFoodVals![13].toString(), style: TextStyle(fontSize: 12, overflow:TextOverflow.clip))] :
+                                        [SizedBox(
+                                          height: 25,
+                                          width: pageWidth * .3,
+                                          child: TextField(
+                                            keyboardType: TextInputType.number,
+                                            decoration: InputDecoration(isDense: true,),
+                                            controller: _codeTextController,
+                                            onChanged: _handleCodeChange,
+                                            style: TextStyle(fontSize: 12, overflow: TextOverflow.clip),
+                                            inputFormatters: [
+                                              FilteringTextInputFormatter.allow(RegExp(r'[\d]*'))
+                                            ],
+                                          ),
+                                        ),
+                                        GestureDetector(onTap: _resetCode, child: Icon(Icons.undo)),
+                                        GestureDetector(onTap: _scanCode, child: Icon(Icons.qr_code_scanner_sharp)),]
+                                    ),
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -380,7 +448,8 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
                     //Temp info displayer
                     Expanded(
                       child: SingleChildScrollView(
-                        child: Column(children: [
+                        child: Column(
+                          children: [
                           ModifiableFoodItemData(
                               lbl: "Serving Size",
                               qty: _currFoodVals![1],
@@ -413,57 +482,76 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
                               currFood: currFood,
                               currFoodVals: _currFoodVals!,
                               scaleFunc: _scaleUpFoods),
-                          ModifiableFoodItemData(
-                              lbl: "Calories",
-                              qty: null,
-                              amt: _currFoodVals![3],
-                              uts: 'kcal',
-                              editValue: _editSelection,
-                              editSpecific: _toggleEditSpecific,
-                              currFood: currFood,
-                              currFoodVals: _currFoodVals!,
-                              scaleFunc: _scaleUpFoods),
-                          ModifiableFoodItemData(
-                              lbl: "Carbohydrates",
-                              qty: null,
-                              amt: _currFoodVals![4],
-                              uts: 'g',
-                              editValue: _editSelection,
-                              editSpecific: _toggleEditSpecific,
-                              currFood: currFood,
-                              currFoodVals: _currFoodVals!,
-                              scaleFunc: _scaleUpFoods),
-                          ModifiableFoodItemData(
-                              lbl: "Fats",
-                              qty: null,
-                              amt: _currFoodVals![5],
-                              uts: 'g',
-                              editValue: _editSelection,
-                              editSpecific: _toggleEditSpecific,
-                              currFood: currFood,
-                              currFoodVals: _currFoodVals!,
-                              scaleFunc: _scaleUpFoods),
-                          ModifiableFoodItemData(
-                              lbl: "Protein",
-                              qty: null,
-                              amt: _currFoodVals![6],
-                              uts: 'g',
-                              editValue: _editSelection,
-                              editSpecific: _toggleEditSpecific,
-                              currFood: currFood,
-                              currFoodVals: _currFoodVals!,
-                              scaleFunc: _scaleUpFoods),
-                          ModifiableFoodItemData(
-                              lbl: "Sugar",
-                              qty: null,
-                              amt: _currFoodVals![7],
-                              uts: 'g',
-                              editValue: _editSelection,
-                              editSpecific: _toggleEditSpecific,
-                              currFood: currFood,
-                              currFoodVals: _currFoodVals!,
-                              scaleFunc: _scaleUpFoods),
-							SizedBox(height: 150),
+                            Center(
+                              child: GestureDetector(
+                                onTap: () => _toggleViewNutritionInfo(),
+                                child: Container(
+                                  padding: EdgeInsets.all(5),
+                                  color: Colors.transparent,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text("Show Nutrition Information", style: TextStyle(overflow: TextOverflow.ellipsis, fontSize: 12)),
+                                      Icon(viewNutritionInfo ? Icons.arrow_drop_down : Icons.arrow_right),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          viewNutritionInfo ? Column( children:[
+                            ModifiableFoodItemData(
+                                lbl: "Calories",
+                                qty: null,
+                                amt: _currFoodVals![3],
+                                uts: 'kcal',
+                                editValue: _editSelection,
+                                editSpecific: _toggleEditSpecific,
+                                currFood: currFood,
+                                currFoodVals: _currFoodVals!,
+                                scaleFunc: _scaleUpFoods),
+                            ModifiableFoodItemData(
+                                lbl: "Carbohydrates",
+                                qty: null,
+                                amt: _currFoodVals![4],
+                                uts: 'g',
+                                editValue: _editSelection,
+                                editSpecific: _toggleEditSpecific,
+                                currFood: currFood,
+                                currFoodVals: _currFoodVals!,
+                                scaleFunc: _scaleUpFoods),
+                            ModifiableFoodItemData(
+                                lbl: "Fats",
+                                qty: null,
+                                amt: _currFoodVals![5],
+                                uts: 'g',
+                                editValue: _editSelection,
+                                editSpecific: _toggleEditSpecific,
+                                currFood: currFood,
+                                currFoodVals: _currFoodVals!,
+                                scaleFunc: _scaleUpFoods),
+                            ModifiableFoodItemData(
+                                lbl: "Protein",
+                                qty: null,
+                                amt: _currFoodVals![6],
+                                uts: 'g',
+                                editValue: _editSelection,
+                                editSpecific: _toggleEditSpecific,
+                                currFood: currFood,
+                                currFoodVals: _currFoodVals!,
+                                scaleFunc: _scaleUpFoods),
+                            ModifiableFoodItemData(
+                                lbl: "Sugar",
+                                qty: null,
+                                amt: _currFoodVals![7],
+                                uts: 'g',
+                                editValue: _editSelection,
+                                editSpecific: _toggleEditSpecific,
+                                currFood: currFood,
+                                currFoodVals: _currFoodVals!,
+                                scaleFunc: _scaleUpFoods),
+                          ]) : SizedBox.shrink(),
+                          GraphFoodItemDataDisplay(currFoodVals: _currFoodVals!),
+              SizedBox(height: 150),
                         ]),
                       ),
                     )
@@ -582,6 +670,7 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
     'oz': 28.3495,
     'lb': 453.592,
     'mg': .001,
+    'mcg': .000001
   };
 
   static const volumeUnitsPerMl = {
@@ -611,6 +700,7 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
     'qt': ['qt', 'quart', 'quarts,' 'qts'],
     'mg': ['mg', 'milligrams', 'millgram', 'mgs'],
     'cL': ['cl'],
+    'mcg': ['mcg', 'microgram', 'mcgs', 'micrograms'],
   };
 
   late TextEditingController _textController;
@@ -670,8 +760,8 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
   // Helper to get the initial value for the TextField based on the label
   String _getInitialValueForEditor() {
     // Use the current 'amount' state, which is synchronized with the slider
-    return amount?.toStringAsFixed(1) ??
-        ""; // Format to one decimal for consistency
+    if (amount == null) return "";
+    return (amount! * (attributeID == "calories" && units! == "kJ" ? 4.184 : 1)).toStringAsFixed(1); // Format to one decimal for consistency
   }
 
   void _updateEditingStateAndText() {
@@ -757,12 +847,8 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
           else if (attributeID == 'servings') {
             if (scaleOtherUnits == true) _scaleUpFoods!(newValue / amount!);
             _currFoodVals[currEditIndex!] = newValue;
-          } else if (attributeID == "calories") {
-            if (units == "kJ") {
-              _currFoodVals[currEditIndex!] = newValue / 4.184;
-            }
           } else {
-            _currFoodVals[currEditIndex!] = newValue;
+            _currFoodVals[currEditIndex!] = newValue / (attributeID == "calories" && units! == "kJ" ? 4.184 : 1);
           }
           if (attributeID == "density") {
             _scaleUpFoods!(1.0);
@@ -785,7 +871,7 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
   void _setZeroScale() {
     setState(() {
       if (amount != null) {
-        amount! > 0 ? currZeroScale = amount : null;
+        amount! > 0 ? currZeroScale = amount! * (attributeID == "calories" && units! == "kJ" ? 4.184 : 1): null;
       }
     });
   }
@@ -811,15 +897,11 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
   void _changeUnits(String? newValue) {
     if (attributeID == "calories") {
       setState(() {
-        if (newValue == "kJ") {
-          amount = amount! * 4.184;
-          startingAmount = startingAmount! * 4.184;
-        } else {
-          amount = amount! / 4.184;
-          startingAmount = startingAmount! / 4.184;
+        if (units != newValue)
+        {
+          units = newValue;
+          currZeroScale = currZeroScale! * (attributeID == "calories" && units! == "kJ" ? 4.184 : 1/4.184);
         }
-        units = newValue;
-        _setZeroScale();
       });
       return;
     }
@@ -847,11 +929,11 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
           : 1.0;
       num scaleFactor = newIsWeightUnit ? (1 / newScale!) : (oldScale! / newScale!) * densityFactor;
       startingAmount = newIsWeightUnit ? scaleFactor * _currFoodVals[2] : startingAmount! * scaleFactor;
+      currZeroScale = currZeroScale! * (newIsWeightUnit ? oldScale!*scaleFactor : scaleFactor);
       amount = newIsWeightUnit ? _currFoodVals[2] * scaleFactor : amount! * scaleFactor;
       units = newValue;
       _currFoodVals[currEditIndex!] = "$amount $units";
       _scaleUpFoods!(1);
-      _setZeroScale();
     });
   }
 
@@ -940,10 +1022,10 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
                   attributeID != "density" &&
                   attributeID != "servings")
       { 
-        _textController.text =  (amount! * _currFoodVals[8]).toStringAsFixed(1);
+        _textController.text =  (amount! * _currFoodVals[8]* (attributeID == "calories" && units! == "kJ" ? 4.184 : 1)).toStringAsFixed(1);
         
       }else{
-        _textController.text =  amount!.toStringAsFixed(1);
+        _textController.text =  (amount! * (attributeID == "calories" && units! == "kJ" ? 4.184 : 1)).toStringAsFixed(1);
       }
     }
     String strippedUnits = units!
@@ -969,8 +1051,10 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
       ),
       Expanded(
         child: Text(
-          "${((_currFoodVals[11] && attributeID != "serving_size" && attributeID != "density"  &&
-          attributeID != "servings"? amount! * _currFoodVals[8] : amount!).toStringAsFixed(1))} ${units!}",
+          "${(((_currFoodVals[11] && attributeID != "serving_size" && attributeID != "density"  &&
+          attributeID != "servings"? amount! * _currFoodVals[8] : amount!) 
+          * (attributeID == "calories" && units! == "kJ" ? 4.184 : 1) )
+          .toStringAsFixed(1))} ${units!}",
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.end,
           style: TextStyle(fontSize: 12)),
@@ -987,6 +1071,7 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
             width: 50,
             child: TextField(
               keyboardType: TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(isDense: true,),
               controller: _textController,
               onChanged: _handleTextboxChange,
               style: TextStyle(overflow: TextOverflow.ellipsis, fontSize: 12),
@@ -998,9 +1083,11 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
           Container(
             child: "calories" == attributeID
                 ? DropdownButton<String>(
+                    isDense: true,
+                    underline: SizedBox.shrink(),
                     value: units,
                     style: TextStyle(fontSize: 12, overflow: TextOverflow.clip, color: Colors.black),
-                    onChanged: (String? newValue) => _changeUnits(newValue),
+                    onChanged: (String? newValue) => {_changeUnits(newValue), _textController.text = (amount! * (attributeID == "calories" && units! == "kJ" ? 4.184 : 1)).toStringAsFixed(1)},
                     items: ["kcal", "kJ"]
                         .map((unit) => DropdownMenuItem<String>(
                               value: unit,
@@ -1010,6 +1097,8 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
                   )
                 : normalizedUnit != "" && "serving_size" == attributeID
                     ? DropdownButton<String>(
+                        isDense: true,
+                        underline: SizedBox.shrink(),
                         value: normalizedUnit,
                         style: TextStyle(fontSize: 12, overflow: TextOverflow.clip, color: Colors.black),
                         onChanged: (String? newValue) => _changeUnits(newValue),
@@ -1043,8 +1132,8 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
             inactiveTrackColor: Colors.grey.shade800,
             thumbColor: Colors.blueAccent,
             overlayColor: Colors.blueAccent.withAlpha(0x29), // Splash color
-            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10.0),
-            overlayShape: const RoundSliderOverlayShape(overlayRadius: 20.0),
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7.0),
+            overlayShape: const RoundSliderOverlayShape(overlayRadius: 12.0),
             trackHeight: 2.0,
           ),
           child: Slider(
@@ -1055,20 +1144,26 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
                     : num < currZeroScale! / 4 && num != 0
                         ? currZeroScale = num
                         : null),
-            value: ((amount == .00000000000017 ? 0.0: amount ?? 0.0).toDouble()).clamp(0.0,
+            value: ((amount == .00000000000017 ? 0.0: amount ?? 0.0).toDouble() 
+                * (_currFoodVals[11] &&
+                        attributeID != "serving_size" &&
+                        attributeID != "density" &&
+                        attributeID != "servings" ? _currFoodVals[8]: 1) 
+                * (attributeID == "calories" && units! == "kJ" ? 4.184 : 1)
+            ).clamp(0.0,
                 (currZeroScale! >= 0 ? currZeroScale!.toDouble() * 2.0 : 0.0)),
             min: 0.0,
             max: (currZeroScale == 0 || currZeroScale == null)
                 ? 100.0
                 : (currZeroScale! < 0 ? 0.0 : currZeroScale!.toDouble() * 2.0),
             divisions: 1000,
-            label: (_currFoodVals[11] &&
+            label: ((_currFoodVals[11] &&
                         attributeID != "serving_size" &&
                         attributeID != "density" &&
                         attributeID != "servings"
                     ? amount! * _currFoodVals[8]
-                    : amount!)
-                .toStringAsFixed(1),
+                    : amount!) * (attributeID == "calories" && units! == "kJ" ? 4.184 : 1)
+              ).toStringAsFixed(1),
             onChanged: (double newValue) {
               setState(() {
                 if ((newValue == 0 && (attributeID == "serving_size" || attributeID == "servings" ))){
@@ -1082,24 +1177,21 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
                 }else if (attributeID == 'servings') {
                   if (scaleOtherUnits == true) _scaleUpFoods!(newValue / amount!);
                   _currFoodVals[currEditIndex!] = newValue;
-                } else if (attributeID == "calories") {
-                  if (units == "kJ") {
-                    _currFoodVals[currEditIndex!] = newValue / 4.184;
-                  }
-                } else {
-                  _currFoodVals[currEditIndex!] = newValue;
+                }
+                else {
+                  _currFoodVals[currEditIndex!] = newValue / (attributeID == "calories" && units! == "kJ" ? 4.184 : 1);
                 }
                 if (attributeID == "density") {
                   _scaleUpFoods!(1.0);
                 }
-                amount = newValue;
-                _textController.text = (_currFoodVals[11] &&
+                amount = newValue / (attributeID == "calories" && units! == "kJ" ? 4.184 : 1);
+                _textController.text = ((_currFoodVals[11] &&
                             attributeID != "serving_size" &&
                             attributeID != "density"  &&
                   attributeID != "servings"
                         ? amount! * _currFoodVals[8]
-                        : amount!)
-                    .toStringAsFixed(1);
+                        : amount!) * (attributeID == "calories" && units! == "kJ" ? 4.184 : 1)
+                  ).toStringAsFixed(1);
               });
             },
           ),
@@ -1108,6 +1200,7 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
             ? Row(
                 children: [
                   Checkbox(
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     value: scaleOtherUnits,
                     onChanged: (bool? value) {
                       setState(() {
@@ -1115,7 +1208,8 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
                       });
                     },
                   ),
-                  Expanded(child: Text("Scale other attributes", style: TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)),
+                  GestureDetector(onTap: () {setState(() {scaleOtherUnits = !(scaleOtherUnits ?? false);});},
+                    child: Text("Scale other attributes", style: TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)),
                 ],
               )
             : SizedBox.shrink(),
@@ -1131,10 +1225,12 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
 
 class GraphFoodItemDataDisplay extends StatefulWidget{
   final List currFoodVals;
+  final List dailyValues;
 
   const GraphFoodItemDataDisplay({
     super.key,
     required this.currFoodVals,
+    this.dailyValues = const ["FDA 2000-Calorie Guide", 2000.0, 275.0, 78.0, 50.0, 100.0],
   });
 
   @override
@@ -1152,6 +1248,11 @@ class _GraphFoodItemDataDisplayState extends State<GraphFoodItemDataDisplay> {
   
   @override
   Widget build(BuildContext context) {
+    num calories;
+    num carbs;
+    num fats;
+    num protein;
+    num sugar;
     return Container();
   }
 }
