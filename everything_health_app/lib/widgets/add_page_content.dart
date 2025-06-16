@@ -79,8 +79,7 @@ class AddPage extends StatelessWidget {
 
       double menuOptionWidth = (pageWidth - 20) / 3;
       double menuOptionHeight = menuOptionWidth * (2 / 3);
-      menuOptionHeight = math.min(menuOptionHeight, (defaultOrangeHeight - 120) / 3); 
-      menuOptionWidth = menuOptionHeight * 1.5;
+      menuOptionHeight = math.min(menuOptionHeight, (defaultOrangeHeight - 80) / 3);
 
 
       return Stack(children: [
@@ -107,11 +106,13 @@ class AddPage extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 5),
                           const Text("Log Food",
                               style: TextStyle(
+                                fontWeight: FontWeight.w700,
                                 fontSize: 20,
                                 color: Color.fromARGB(255, 255, 255, 255),
+                                overflow: TextOverflow.clip,
                                 decoration: TextDecoration.none,
                               )),
                           Row(
@@ -161,9 +162,11 @@ class AddPage extends StatelessWidget {
                                       onLogFoodSelection(4)), // Changed Index
                             ],
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 5),
                           const Text("Log Excercise",
                               style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                overflow: TextOverflow.clip,
                                 fontSize: 20,
                                 color: Color.fromARGB(255, 255, 255, 255),
                                 decoration: TextDecoration.none,

@@ -11,7 +11,8 @@ part 'history_foods.g.dart';
 @collection
 // CHANGE 2: Update the class name
 class HistoryFood { 
-  final Id id = Isar.autoIncrement; 
+  @Index()
+  late Id id = Isar.autoIncrement; 
 
   @Index()
   late String normalized_name;

@@ -208,6 +208,7 @@ HistoryFood _historyFoodDeserialize(
     sugar: reader.readDouble(offsets[15]),
     time: reader.readLong(offsets[16]),
   );
+  object.id = id;
   return object;
 }
 
@@ -266,7 +267,9 @@ List<IsarLinkBase<dynamic>> _historyFoodGetLinks(HistoryFood object) {
 }
 
 void _historyFoodAttach(
-    IsarCollection<dynamic> col, Id id, HistoryFood object) {}
+    IsarCollection<dynamic> col, Id id, HistoryFood object) {
+  object.id = id;
+}
 
 extension HistoryFoodQueryWhereSort
     on QueryBuilder<HistoryFood, HistoryFood, QWhere> {

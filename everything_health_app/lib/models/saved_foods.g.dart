@@ -201,6 +201,7 @@ SavedFood _savedFoodDeserialize(
     servings: reader.readDoubleOrNull(offsets[14]) ?? 1.0,
     sugar: reader.readDouble(offsets[15]),
   );
+  object.id = id;
   return object;
 }
 
@@ -256,7 +257,9 @@ List<IsarLinkBase<dynamic>> _savedFoodGetLinks(SavedFood object) {
   return [];
 }
 
-void _savedFoodAttach(IsarCollection<dynamic> col, Id id, SavedFood object) {}
+void _savedFoodAttach(IsarCollection<dynamic> col, Id id, SavedFood object) {
+  object.id = id;
+}
 
 extension SavedFoodQueryWhereSort
     on QueryBuilder<SavedFood, SavedFood, QWhere> {

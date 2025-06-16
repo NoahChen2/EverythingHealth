@@ -1,4 +1,6 @@
 // ignore_for_file: non_constant_identifier_names
+import 'package:everything_health_app/main.dart';
+import 'package:everything_health_app/models/saved_foods.dart';
 import 'package:flutter/material.dart';
 // ignore: unnecessary_import
 import 'package:flutter/rendering.dart';
@@ -45,9 +47,30 @@ class _LogFoodPageState extends State<LogFoodPage> {
     });
   }
 
-  void _addFoodToSaved(FoodItem food)
-  {
-    print(food);
+  bool _checkSavedFood(FoodItem food) {
+    return food.isSaved;
+  }
+
+  Future<void> _addFoodToSaved(FoodItem food)
+  async {
+    bool tempSaved = _checkSavedFood(food);
+    if (tempSaved){
+      food.isSaved = false;
+      await isar.writeTxn(() async {
+        await isar.savedFoods.delete(food.id);
+      });
+    }
+    else{
+      print('Saving... ${food.name}');
+      food.isSaved = true;
+      SavedFood newEntry = SavedFood.fromJson(food.toJson());
+      
+      await isar.writeTxn(() async {
+        // Take your 'newEntry' paper and put it in the 'historyFoods' binder
+        int newID = await isar.savedFoods.put(newEntry);
+        setState(() {food.id = newID;});
+      });
+    }
   }
 
   void _addFoodToHistory(FoodItem food)
@@ -90,7 +113,7 @@ class _LogFoodPageState extends State<LogFoodPage> {
     ];
 
     var logFoodPagesContent = [ // Specific content for each sub-page
-      SearchFoodPage(addingFoodFunc: _addingFoodFunc),
+      SearchFoodPage(addFoodFunc: _addingFoodFunc, saveFoodFunc: _addFoodToSaved),
       Container(color: Colors.blueAccent, child: const Center(child: Text("Scan Barcode Content"))),
       Container(color: Colors.orangeAccent, child: const Center(child: Text("History Content"))),
       Container(color: Colors.blueGrey, child: const Center(child: Text("Favorites Content"))),
@@ -151,6 +174,7 @@ class FoodItem {
   bool densityRequired;
   num time;
   num servings;
+  bool isSaved;
 
   FoodItem({
     required this.name,
@@ -171,6 +195,7 @@ class FoodItem {
     this.img_url = "",
     this.time = 0,
     this.servings = 1,
+    this.isSaved = false,
   }) : color = color ?? HSLColor.fromAHSL(1.0, random.nextInt(360).toDouble(), .38, .50).toColor(); // Provide a default color if none is given
   
   void operator []=(String key, dynamic value) {
@@ -211,6 +236,8 @@ class FoodItem {
         time = value;
       case 'servings':
         servings = value;
+      case 'isSaved':
+        isSaved = value;
       default:
         throw ArgumentError('Unknown attribute: $key');
     }
@@ -254,6 +281,8 @@ class FoodItem {
         return time;
       case 'servings':
         return servings;
+      case 'isSaved':
+        return isSaved;
       default:
         throw ArgumentError('Unknown attribute: $key');
     }

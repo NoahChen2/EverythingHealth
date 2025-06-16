@@ -9,7 +9,8 @@ part 'saved_foods.g.dart';
 
 @collection
 class SavedFood {
-  final Id id = Isar.autoIncrement;
+  @Index()
+  late Id id = Isar.autoIncrement;
 
   @Index()
   late String normalized_name;

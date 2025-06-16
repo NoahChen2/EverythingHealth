@@ -36,7 +36,6 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           useMaterial3: true,
           fontFamily: 'Inter',
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.black),
         ),
         home: const MyHomePage(), // Made MyHomePage const
       ),

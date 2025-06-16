@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:everything_health_app/main.dart';
 import 'package:everything_health_app/models/history_foods.dart';
 import 'package:everything_health_app/models/saved_foods.dart';
@@ -10,11 +12,17 @@ import 'dart:async';
 class ChooseFoodItem extends StatefulWidget {
   final FoodItem food;
   final Function close;
-  final Function (String) goHome;
-  final Function (FoodItem) addFoodToSaved;
-  final Function (FoodItem) addFoodToHistory;
+  final Function(String) goHome;
+  final Function(FoodItem) addFoodToSaved;
+  final Function(FoodItem) addFoodToHistory;
 
-  const ChooseFoodItem({super.key, required this.food, required this.close, required this.goHome, required this.addFoodToSaved, required this.addFoodToHistory});
+  const ChooseFoodItem(
+      {super.key,
+      required this.food,
+      required this.close,
+      required this.goHome,
+      required this.addFoodToSaved,
+      required this.addFoodToHistory});
 
   @override
   State<ChooseFoodItem> createState() => _ChooseFoodItemState();
@@ -31,6 +39,9 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
   bool ifSetCurrFoodVals = false;
   List? _currFoodVals;
   bool viewNutritionInfo = false;
+  bool _isSaved = false;
+  bool _needSaveDecision = false;
+  bool _autoSaveApply = false;
 
   @override
   void initState() {
@@ -61,13 +72,58 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
   }
 
   void _toggleViewNutritionInfo() {
-    setState((){
+    setState(() {
       viewNutritionInfo = !viewNutritionInfo;
     });
   }
 
+  Future<void> _handleApplyNew() async {
+    setState((){
+      _autoSaveApply = true;
+      _isSaved = false;
+      currFood.isSaved = false;
+    });
+    _toggleEditAll();
+  }
+
+  Future<void> _handleApplySave () async {
+      FoodItem tempFood = FoodItem(
+        name: _currFoodVals![10],
+        serving_size: _currFoodVals![1],
+        grams: _currFoodVals![2],
+        calories: _currFoodVals![3],
+        carbs: _currFoodVals![4],
+        fats: _currFoodVals![5],
+        protein: _currFoodVals![6],
+        sugar: _currFoodVals![7],
+        density: _currFoodVals![8],
+        normalized_name: _normalizeText(_currFoodVals![10]),
+        densityRequired: _currFoodVals![11],
+        servings: _currFoodVals![12],
+        code: _currFoodVals![13],
+        isSaved: true,
+      );
+      print('Saving... ${tempFood.name}');
+      SavedFood newEntry = SavedFood.fromJson(tempFood.toJson());
+      newEntry.id = currFood.id;
+      await isar.writeTxn(() async {
+          await isar.savedFoods.put(newEntry);
+      });
+      setState(() {
+        _autoSaveApply = true;
+      });
+    _isSaved = true;
+    _toggleEditAll();
+  }
+
   void _toggleEditAll() {
     setState(() {
+      if (currFood.isSaved && !_editing && !_autoSaveApply){
+        _needSaveDecision = true;
+      }
+      else if (currFood.isSaved && _editing || _autoSaveApply) {
+        _needSaveDecision = false;
+      }
       _editing = !_editing;
       if (!_editing) {
         _editSelection = [-1];
@@ -110,7 +166,7 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
 
   Future<void> _addFood() async {
     FoodItem tempFood = FoodItem(
-      name: _currFoodVals![10], 
+      name: _currFoodVals![10],
       serving_size: _currFoodVals![1],
       grams: _currFoodVals![2],
       calories: _currFoodVals![3],
@@ -121,14 +177,15 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
       density: _currFoodVals![8],
       normalized_name: _normalizeText(_currFoodVals![10]),
       densityRequired: _currFoodVals![11],
-      time: DateTime.now().toUtc().difference(DateTime.utc(1970, 1, 1)).inSeconds,
+      time:
+          DateTime.now().toUtc().difference(DateTime.utc(1970, 1, 1)).inSeconds,
       servings: _currFoodVals![12],
       code: _currFoodVals![13],
     );
     HistoryFood newEntry = HistoryFood.fromJson(tempFood.toJson());
     await isar.writeTxn(() async {
       // Take your 'newEntry' paper and put it in the 'historyFoods' binder
-      await isar.historyFoods.put(newEntry); 
+      await isar.historyFoods.put(newEntry);
     });
     widget.close();
     Function func = widget.goHome("Food Added");
@@ -136,27 +193,44 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
   }
 
   Future<void> _saveFood() async {
-    FoodItem tempFood = FoodItem(
-      name: _currFoodVals![10], 
-      serving_size: _currFoodVals![1],
-      grams: _currFoodVals![2],
-      calories: _currFoodVals![3],
-      carbs: _currFoodVals![4],
-      fats: _currFoodVals![5],
-      protein: _currFoodVals![6],
-      sugar: _currFoodVals![7],
-      density: _currFoodVals![8],
-      normalized_name: _normalizeText(_currFoodVals![10]),
-      densityRequired: _currFoodVals![11],
-      servings: _currFoodVals![12],
-      code: _currFoodVals![13],
-    );
-    print('Saving... ${tempFood.name}');
-    SavedFood newEntry = SavedFood.fromJson(tempFood.toJson());
-    await isar.writeTxn(() async {
-      // Take your 'newEntry' paper and put it in the 'historyFoods' binder
-      await isar.savedFoods.put(newEntry); 
-    });
+    if (_isSaved){
+      setState(() {
+        _isSaved = false;
+        currFood.isSaved = false;
+        });
+      await isar.writeTxn(() async {
+        await isar.savedFoods.delete(currFood.id);
+      });
+    }
+    else{
+      setState(() => _isSaved = true);
+      FoodItem tempFood = FoodItem(
+        name: _currFoodVals![10],
+        serving_size: _currFoodVals![1],
+        grams: _currFoodVals![2],
+        calories: _currFoodVals![3],
+        carbs: _currFoodVals![4],
+        fats: _currFoodVals![5],
+        protein: _currFoodVals![6],
+        sugar: _currFoodVals![7],
+        density: _currFoodVals![8],
+        normalized_name: _normalizeText(_currFoodVals![10]),
+        densityRequired: _currFoodVals![11],
+        servings: _currFoodVals![12],
+        code: _currFoodVals![13],
+      );
+      print('Saving... ${tempFood.name}');
+      SavedFood newEntry = SavedFood.fromJson(tempFood.toJson());
+      
+      await isar.writeTxn(() async {
+        // Take your 'newEntry' paper and put it in the 'historyFoods' binder
+        int newID = await isar.savedFoods.put(newEntry);
+        setState(() {
+          currFood.id = newID;
+          currFood.isSaved = true;  
+        });
+      });
+    }
   }
 
   void _handleNameChange(String str) {
@@ -166,19 +240,18 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
   }
 
   void _handleCodeChange(String str) {
-    if (str == "")
-    {
+    if (str == "") {
       return;
     }
-    setState((){
-      try{
+    setState(() {
+      try {
         _currFoodVals![13] = int.parse(str);
       }
       // ignore: empty_catches
-      catch(e){}
+      catch (e) {}
     });
   }
-  
+
   static String _normalizeText(String text) {
     String normalized = text.toLowerCase();
     normalized = normalized.replaceAll(RegExp(r'[^\w\s]+'), '');
@@ -186,14 +259,17 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
     return normalized;
   }
 
-  void _resetCode(){
-    _codeTextController.text = widget.food.code.toStringAsFixed(0) == "-1" ? "":widget.food.code.toStringAsFixed(0);
+  void _resetCode() {
+    _codeTextController.text = widget.food.code.toStringAsFixed(0) == "-1"
+        ? ""
+        : widget.food.code.toStringAsFixed(0);
     _currFoodVals![13] = widget.food.code;
   }
 
-  void _scanCode(){
+  void _scanCode() {
     print("TODO: SCANNING...");
   }
+
   @override
   void dispose() {
     _nameTextController.dispose();
@@ -206,7 +282,6 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
     final Size screenSize = MediaQuery.of(context).size;
     final double pageHeight = screenSize.height;
     final double pageWidth = screenSize.width;
-
     if (!ifSetCurrFoodVals ||
         (_currFoodVals![1] == "DEFAULT_SERVING_SIZE" &&
             _currFoodVals![2] == -1) ||
@@ -227,7 +302,14 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
         currFood.servings,
         currFood.code,
       ];
+      if (!(_currFoodVals![1] == "DEFAULT_SERVING_SIZE" &&
+            _currFoodVals![2] == -1))
+            {
+        _isSaved = currFood.isSaved;
+        }
       ifSetCurrFoodVals = true;
+      _needSaveDecision = false;
+      _autoSaveApply = false;
     }
 
     if (widget.food.name == "DEFAULT_NAME" && widget.food.grams == -1) {
@@ -285,18 +367,21 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
                       child: Icon(Icons.arrow_back_ios, color: Colors.white)))),
         ]);
       }
-      if (!_editing){
+      if (!_editing) {
         _nameTextController.text = _currFoodVals![10];
-        _codeTextController.text = _currFoodVals![13].toStringAsFixed(0) == "-1" ? "": _currFoodVals![13].toStringAsFixed(0);
+        _codeTextController.text = _currFoodVals![13].toStringAsFixed(0) == "-1"
+            ? ""
+            : _currFoodVals![13].toStringAsFixed(0);
       }
       return Stack(children: [
         GestureDetector(
             onTap: () {
-              setState(() { 
+              setState(() {
                 _editSelection = [-1];
                 _editing = false;
-              }); 
-              widget.close();},
+              });
+              widget.close();
+            },
             child: Container(
               decoration:
                   BoxDecoration(color: const Color.fromARGB(150, 0, 0, 0)),
@@ -308,148 +393,200 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
                 width: pageWidth * .9,
                 clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
-                    color: Colors.red,
+                    color: Color.fromARGB(255, 0, 36, 72),
                     borderRadius: BorderRadius.circular(pageWidth * .05)),
                 child: Column(
                   children: [
-                    Stack(children: [
-                      Container(
-                          height: 125,
-                          width: pageWidth * .9,
-                          decoration: BoxDecoration(color: currFood.color)),
-                      Row(children: [
-                        GestureDetector(
-                            onTap: () => _handleEnlargeImage(),
-                            child: Container(
-                              height: 150,
-                              width: pageWidth * .4,
-                              decoration: BoxDecoration(
-                                  color: currFood.color,
-                                  borderRadius: BorderRadius.vertical(
-                                      bottom: Radius.circular(25))),
-                              clipBehavior: Clip.antiAlias,
-                              child: Center(
-                                child: Image.network(currFood.image_small_url,
-                                    fit: BoxFit.cover, loadingBuilder:
-                                        (BuildContext context, Widget child,
+                    Container(
+                      padding: EdgeInsets.only(bottom: 5),
+                      child: Stack(children: [
+                        Container(
+                            height: 125,
+                            width: pageWidth * .9,
+                            decoration: BoxDecoration(color: currFood.color)),
+                        Row(children: [
+                            GestureDetector(
+                                onTap: () => _handleEnlargeImage(),
+                                child: Container(
+                                  height: 150,
+                                  width: pageWidth * .4,
+                                  decoration: BoxDecoration(
+                                      color: currFood.color,
+                                      borderRadius: BorderRadius.vertical(
+                                          bottom: Radius.circular(25))),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: Center(
+                                    child: Image.network(currFood.image_small_url,
+                                        fit: BoxFit.cover,
+                                        loadingBuilder: (BuildContext context,
+                                            Widget child,
                                             ImageChunkEvent? loadingProgress) {
-                                  if (loadingProgress == null) {
-                                    return child; // Image is fully loaded
-                                  }
-                                  return Center(
-                                    child: CircularProgressIndicator(
-                                      // Optionally use loadingProgress to show download percentage
-                                      value:
-                                          loadingProgress.expectedTotalBytes !=
+                                      if (loadingProgress == null) {
+                                        return child; // Image is fully loaded
+                                      }
+                                      return Center(
+                                        child: CircularProgressIndicator(
+                                          // Optionally use loadingProgress to show download percentage
+                                          value: loadingProgress
+                                                      .expectedTotalBytes !=
                                                   null
                                               ? loadingProgress
                                                       .cumulativeBytesLoaded /
                                                   loadingProgress
                                                       .expectedTotalBytes!
                                               : null,
-                                    ),
-                                  );
-                                }, errorBuilder: (BuildContext context,
-                                        Object exception,
-                                        StackTrace? stackTrace) {
-                                  // You can return any widget here, e.g., an icon or placeholder text
-                                  return Container();
-                                }),
-                              ),
-                            )),
-                        SizedBox(
-                          height: 150,
-                          child: Column(
-                            children: [
-                              Container(
-                                  height: 25,
-                                  width: pageWidth * .5,
-                                  color: Colors.amber,
-                                  child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        SizedBox(width: pageWidth * .1),
-                                        GestureDetector(
-                                          onTap: () => _toggleEditAll(),
-                                          child: _editing
-                                              ? Icon(Icons.check)
-                                              : Icon(Icons.edit),
                                         ),
-                                        GestureDetector(
-                                          onTap: _saveFood,
-                                          child: Icon(Icons.bookmark),
-                                        ),
-                                        GestureDetector(
-                                          onTap: () => _addFood(),
-                                          child: Icon(Icons.add),
-                                        ),
-                                      ])),
-                              SizedBox(
-                                  height: 100,
-                                  width: pageWidth * .5,
-                                  child: Center(
-                                    child: _editing ? 
+                                      );
+                                    }, errorBuilder: (BuildContext context,
+                                            Object exception,
+                                            StackTrace? stackTrace) {
+                                      // You can return any widget here, e.g., an icon or placeholder text
+                                      return Container();
+                                    }),
+                                  ),
+                                )),
+                            Expanded(
+                              child: SizedBox(
+                                height: 150,
+                                child: Column(
+                                  children: [
                                     Container(
-                                      width: pageWidth * .5,
-                                      padding: EdgeInsets.all(5),
-                                      child: TextField(
-                                        keyboardType: TextInputType.numberWithOptions(decimal: true),
-                                        controller: _nameTextController,
-                                        onChanged: _handleNameChange,
-                                        style: TextStyle(overflow: TextOverflow.ellipsis),
-                                      ),
-                                    )
-                                    : Container(
-                                      padding: EdgeInsets.all(5),
-                                      child: AutoSizeText(
-                                        _currFoodVals![10],
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                            fontSize: 30,
-                                            fontWeight: FontWeight.w600),
-                                        maxLines: 10,
-                                        overflow: TextOverflow.ellipsis,
+                                        height: 25,
+                                        width: pageWidth * .5,
+                                        color: Color.fromARGB(255, 26, 87, 75),
+                                        child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceEvenly,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.center,
+                                            children: [
+                                              SizedBox(width: pageWidth * .1),
+                                              Expanded(
+                                                child: GestureDetector(
+                                                  onTap: () => _toggleEditAll(),
+                                                  child: _editing
+                                                      ? Icon(Icons.check, color: Colors.white)
+                                                      : Icon(Icons.edit, color: Colors.white),
+                                                ),
+                                              ),
+                                              Expanded(
+                                                child: GestureDetector(
+                                                  onTap: _saveFood,
+                                                  child: Icon(_isSaved ? Icons.bookmark : Icons.bookmark_outline, color: Colors.white),
+                                                ),
+                                              ),
+                                              Expanded(
+                                                child: GestureDetector(
+                                                  onTap: () => _addFood(),
+                                                  child: Icon(Icons.add, color: Colors.white),
+                                                ),
+                                              ),
+                                            ])),
+                                    SizedBox(
+                                        height: 100,
+                                        width: pageWidth * .5,
+                                        child: Center(
+                                          child: _editing
+                                              ? Container(
+                                                  width: pageWidth * .5,
+                                                  padding: EdgeInsets.all(5),
+                                                  child: TextField(
+                                                    keyboardType: TextInputType
+                                                        .numberWithOptions(
+                                                            decimal: true),
+                                                    controller: _nameTextController,
+                                                    onChanged: _handleNameChange,
+                                                    style: TextStyle(
+                                                        overflow:
+                                                            TextOverflow.ellipsis,
+                                                        fontWeight: FontWeight.w600,
+                                                        color: Colors.white),
+                                                  ),
+                                                )
+                                              : Container(
+                                                  padding: EdgeInsets.all(5),
+                                                  child: AutoSizeText(
+                                                    _currFoodVals![10],
+                                                    textAlign: TextAlign.center,
+                                                    style: TextStyle(
+                                                        fontSize: 30,
+                                                        fontWeight: FontWeight.w600,
+                                                        color: Colors.white),
+                                                    maxLines: 10,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                        )),
+                                    Expanded(
+                                      child: Center(
+                                        child: Row(
+                                            spacing: 5,
+                                            children: !_editing
+                                                ? [
+                                                    Expanded(
+                                                      child: Text((
+                                                          _currFoodVals![13] == -1
+                                                              ? "No Barcode Found"
+                                                              : _currFoodVals![13]
+                                                                  .toString()),
+                                                          textAlign: TextAlign.center,
+                                                          style: TextStyle(
+                                                              fontSize: 12,
+                                                              overflow:
+                                                                  TextOverflow.clip,
+                                                              color: Colors.white,)),
+                                                    )
+                                                  ]
+                                                : [
+                                                    Expanded(
+                                                      child: SizedBox(
+                                                        height: 25,
+                                                        width: pageWidth * .3,
+                                                        child: TextField(
+                                                          textAlign: TextAlign.center,
+                                                          keyboardType:
+                                                              TextInputType.number,
+                                                          decoration: InputDecoration(
+                                                            isDense: true,
+                                                          ),
+                                                          controller:
+                                                              _codeTextController,
+                                                          onChanged:
+                                                              _handleCodeChange,
+                                                          style: TextStyle(
+                                                              fontSize: 12,
+                                                              overflow:
+                                                                  TextOverflow.clip,
+                                                              color: Colors.white),
+                                                          inputFormatters: [
+                                                            FilteringTextInputFormatter
+                                                                .allow(
+                                                                    RegExp(r'[\d]*'))
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    GestureDetector(
+                                                        onTap: _resetCode,
+                                                        child: Icon(Icons.undo, color: Colors.white)),
+                                                    GestureDetector(
+                                                        onTap: _scanCode,
+                                                        child: Icon(Icons
+                                                            .qr_code_scanner_sharp, color: Colors.white)),
+                                                  ]),
                                       ),
                                     ),
-                                  )),
-                              Expanded(
-                                child: Center(
-                                  child: Row(
-                                      spacing: 5,
-                                      children: 
-                                        !_editing ? [Text(_currFoodVals![13] == -1 ? "No Barcode Found":_currFoodVals![13].toString(), style: TextStyle(fontSize: 12, overflow:TextOverflow.clip))] :
-                                        [SizedBox(
-                                          height: 25,
-                                          width: pageWidth * .3,
-                                          child: TextField(
-                                            keyboardType: TextInputType.number,
-                                            decoration: InputDecoration(isDense: true,),
-                                            controller: _codeTextController,
-                                            onChanged: _handleCodeChange,
-                                            style: TextStyle(fontSize: 12, overflow: TextOverflow.clip),
-                                            inputFormatters: [
-                                              FilteringTextInputFormatter.allow(RegExp(r'[\d]*'))
-                                            ],
-                                          ),
-                                        ),
-                                        GestureDetector(onTap: _resetCode, child: Icon(Icons.undo)),
-                                        GestureDetector(onTap: _scanCode, child: Icon(Icons.qr_code_scanner_sharp)),]
-                                    ),
+                                  ],
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                      ])
-                    ]),
+                            ),
+                          ]),
+                      ]),
+                    ),
                     //Temp info displayer
                     Expanded(
                       child: SingleChildScrollView(
-                        child: Column(
-                          children: [
+                        child: Column(children: [
                           ModifiableFoodItemData(
                               lbl: "Serving Size",
                               qty: _currFoodVals![1],
@@ -482,115 +619,180 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
                               currFood: currFood,
                               currFoodVals: _currFoodVals!,
                               scaleFunc: _scaleUpFoods),
-                            Center(
-                              child: GestureDetector(
-                                onTap: () => _toggleViewNutritionInfo(),
-                                child: Container(
-                                  padding: EdgeInsets.all(5),
-                                  color: Colors.transparent,
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text("Show Nutrition Information", style: TextStyle(overflow: TextOverflow.ellipsis, fontSize: 12)),
-                                      Icon(viewNutritionInfo ? Icons.arrow_drop_down : Icons.arrow_right),
-                                    ],
+                          ModifiableFoodItemData(
+                              lbl: "Calories",
+                              qty: null,
+                              amt: _currFoodVals![3],
+                              uts: 'kcal',
+                              editValue: _editSelection,
+                              editSpecific: _toggleEditSpecific,
+                              currFood: currFood,
+                              currFoodVals: _currFoodVals!,
+                              scaleFunc: _scaleUpFoods),
+                          Center(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  top: BorderSide(
+                                      color: const Color.fromARGB(
+                                          50, 255, 255, 255)),
+                                ),
+                              ),
+                              child: Center(
+                                child: GestureDetector(
+                                  onTap: () => _toggleViewNutritionInfo(),
+                                  child: Container(
+                                    padding: EdgeInsets.all(5),
+                                    color: Colors.transparent,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Flexible(
+                                          child: Text("Show Nutrition Information",
+                                              style: TextStyle(
+                                                  overflow: TextOverflow.ellipsis,
+                                                  fontSize: 12,
+                                                  color: Colors.white)),
+                                        ),
+                                        Icon(
+                                            viewNutritionInfo
+                                                ? Icons.arrow_drop_down
+                                                : Icons.arrow_right,
+                                            color: Colors.white),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          viewNutritionInfo ? Column( children:[
-                            ModifiableFoodItemData(
-                                lbl: "Calories",
-                                qty: null,
-                                amt: _currFoodVals![3],
-                                uts: 'kcal',
-                                editValue: _editSelection,
-                                editSpecific: _toggleEditSpecific,
-                                currFood: currFood,
-                                currFoodVals: _currFoodVals!,
-                                scaleFunc: _scaleUpFoods),
-                            ModifiableFoodItemData(
-                                lbl: "Carbohydrates",
-                                qty: null,
-                                amt: _currFoodVals![4],
-                                uts: 'g',
-                                editValue: _editSelection,
-                                editSpecific: _toggleEditSpecific,
-                                currFood: currFood,
-                                currFoodVals: _currFoodVals!,
-                                scaleFunc: _scaleUpFoods),
-                            ModifiableFoodItemData(
-                                lbl: "Fats",
-                                qty: null,
-                                amt: _currFoodVals![5],
-                                uts: 'g',
-                                editValue: _editSelection,
-                                editSpecific: _toggleEditSpecific,
-                                currFood: currFood,
-                                currFoodVals: _currFoodVals!,
-                                scaleFunc: _scaleUpFoods),
-                            ModifiableFoodItemData(
-                                lbl: "Protein",
-                                qty: null,
-                                amt: _currFoodVals![6],
-                                uts: 'g',
-                                editValue: _editSelection,
-                                editSpecific: _toggleEditSpecific,
-                                currFood: currFood,
-                                currFoodVals: _currFoodVals!,
-                                scaleFunc: _scaleUpFoods),
-                            ModifiableFoodItemData(
-                                lbl: "Sugar",
-                                qty: null,
-                                amt: _currFoodVals![7],
-                                uts: 'g',
-                                editValue: _editSelection,
-                                editSpecific: _toggleEditSpecific,
-                                currFood: currFood,
-                                currFoodVals: _currFoodVals!,
-                                scaleFunc: _scaleUpFoods),
-                          ]) : SizedBox.shrink(),
-                          GraphFoodItemDataDisplay(currFoodVals: _currFoodVals!),
-              SizedBox(height: 150),
+                          ),
+                          viewNutritionInfo
+                              ? Column(children: [
+                                  ModifiableFoodItemData(
+                                      lbl: "Carbohydrates",
+                                      qty: null,
+                                      amt: _currFoodVals![4],
+                                      uts: 'g',
+                                      editValue: _editSelection,
+                                      editSpecific: _toggleEditSpecific,
+                                      currFood: currFood,
+                                      currFoodVals: _currFoodVals!,
+                                      scaleFunc: _scaleUpFoods),
+                                  ModifiableFoodItemData(
+                                      lbl: "Fats",
+                                      qty: null,
+                                      amt: _currFoodVals![5],
+                                      uts: 'g',
+                                      editValue: _editSelection,
+                                      editSpecific: _toggleEditSpecific,
+                                      currFood: currFood,
+                                      currFoodVals: _currFoodVals!,
+                                      scaleFunc: _scaleUpFoods),
+                                  ModifiableFoodItemData(
+                                      lbl: "Protein",
+                                      qty: null,
+                                      amt: _currFoodVals![6],
+                                      uts: 'g',
+                                      editValue: _editSelection,
+                                      editSpecific: _toggleEditSpecific,
+                                      currFood: currFood,
+                                      currFoodVals: _currFoodVals!,
+                                      scaleFunc: _scaleUpFoods),
+                                  ModifiableFoodItemData(
+                                      lbl: "Sugar",
+                                      qty: null,
+                                      amt: _currFoodVals![7],
+                                      uts: 'g',
+                                      editValue: _editSelection,
+                                      editSpecific: _toggleEditSpecific,
+                                      currFood: currFood,
+                                      currFoodVals: _currFoodVals!,
+                                      scaleFunc: _scaleUpFoods),
+                                ])
+                              : SizedBox.shrink(),
+                          GraphFoodItemDataDisplay(
+                              currFoodVals: _currFoodVals!),
+                          SizedBox(height: 150),
                         ]),
                       ),
                     )
                   ],
                 )),
           ),
-          enlargedPic,
-          Positioned(
-			top: pageHeight * .9 - 50,
-			left: pageWidth * .5 - 100/2,
+          (_editing && _needSaveDecision && !_autoSaveApply && _isSaved?
+          Stack(children:[
+            Positioned(
+            top: pageHeight * .9 - 50,
+            left: pageWidth * .5,
             child: GestureDetector(
-				onTap: _editing ? () => _toggleEditAll() : () => _addFood(),
-				child: Container(
-					height: 50,
-					width: 100,
-					decoration: BoxDecoration(
-						color: _editing? Colors.green : Colors.orange,
-						borderRadius: BorderRadius.vertical(top: Radius.circular(5))
-					),
-					child: _editing ? Center(child: Text("Apply"),) : Center(child: Text("Add"),)
-				),
-			),
-          ),
+              onTap: () => _handleApplySave(),
+              child: Container(
+                  height: 50,
+                  width: 100,
+                  decoration: BoxDecoration(
+                      color: const Color.fromARGB(255, 132, 79, 97),
+                      border: Border(left: BorderSide(color: const Color.fromARGB(255, 119, 122, 134), width: 2)),
+                      borderRadius:
+                          BorderRadius.only(topRight: Radius.circular(5))),
+                  child: Center(child: Text("✓ Apply to Save", textAlign: TextAlign.center, style: TextStyle(color: Colors.white)))),
+              ),
+            ),
+            Positioned(
+              top: pageHeight * .9 - 50,
+              left: pageWidth * .5 - 100,
+              child: GestureDetector(
+                onTap: () => _handleApplyNew(),
+                child: Container(
+                    height: 50,
+                    width: 100,
+                    decoration: BoxDecoration(
+                        color: const Color.fromARGB(255, 47, 87, 79),
+                        border: Border(right: BorderSide(color: const Color.fromARGB(255, 119, 122, 134), width: 2)),
+                        borderRadius:
+                            BorderRadius.only(topLeft: Radius.circular(5))),
+                    child: Center(child: Text("+ Apply to New", textAlign: TextAlign.center,style: TextStyle(color: Colors.white)))),
+                ),
+            ),
+          ])
+          :
+          Positioned(
+            top: pageHeight * .9 - 50,
+            left: pageWidth * .5 - 100 / 2,
+            child: GestureDetector(
+              onTap: _editing ? (_autoSaveApply && _isSaved ? () => _handleApplySave() : () => _toggleEditAll()) : () => _addFood(),
+              child: Container(
+                  height: 50,
+                  width: 100,
+                  decoration: BoxDecoration(
+                      color: _editing ? const Color.fromARGB(255, 132, 79, 97) : Color.fromARGB(255, 26, 87, 75),
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(5))),
+                  child: _editing
+                      ? Center(
+                          child: Text(_autoSaveApply && _isSaved ? "✓ Apply to Save" : "✓ Apply", style: TextStyle(color: Colors.white)))
+                      : Center(
+                          child: Text("+ Add", style: TextStyle(color: Colors.white)),
+                        )),
+            ),
+          )),
+          enlargedPic,
           Positioned(
               top: pageHeight * .95 - 50 / 2,
               left: pageWidth * .5 - 50 / 2,
               child: GestureDetector(
                 onTap: () {
-                  setState(() { 
+                  setState(() {
                     _enlargeImage = false;
                     _editSelection = [-1];
-                    _editing = false;});
+                    _editing = false;
+                  });
                   widget.close();
                 },
                 child: Container(
                   height: 50,
                   width: 50,
                   decoration: BoxDecoration(
-                      color: Colors.orange,
+                      color: Color.fromARGB(255, 0, 88, 175),
                       borderRadius: BorderRadius.circular(30)),
                   child: Icon(
                     Icons.close,
@@ -761,7 +963,8 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
   String _getInitialValueForEditor() {
     // Use the current 'amount' state, which is synchronized with the slider
     if (amount == null) return "";
-    return (amount! * (attributeID == "calories" && units! == "kJ" ? 4.184 : 1)).toStringAsFixed(1); // Format to one decimal for consistency
+    return (amount! * (attributeID == "calories" && units! == "kJ" ? 4.184 : 1))
+        .toStringAsFixed(1); // Format to one decimal for consistency
   }
 
   void _updateEditingStateAndText() {
@@ -797,7 +1000,7 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
       if (attributeID == "serving_size") {
         if (scaleOtherUnits == true) _scaleUpFoods!(startingAmount! / amount!);
         _currFoodVals[currEditIndex!] = "$startingAmount $units";
-      }else if (attributeID == "servings") {
+      } else if (attributeID == "servings") {
         if (scaleOtherUnits == true) _scaleUpFoods!(startingAmount! / amount!);
         _currFoodVals[currEditIndex!] = startingAmount;
       } else if (attributeID == "calories") {
@@ -810,13 +1013,13 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
       amount = startingAmount;
       _isCurrentlyEditing = false;
       if (_currFoodVals[11] &&
-                  attributeID != "serving_size" &&
-                  attributeID != "density" &&
-                  attributeID != "servings")
-      { 
-        _textController.text =  (startingAmount! * _currFoodVals[8]).toStringAsFixed(1);
-      }else{
-        _textController.text =  startingAmount!.toStringAsFixed(1);
+          attributeID != "serving_size" &&
+          attributeID != "density" &&
+          attributeID != "servings") {
+        _textController.text =
+            (startingAmount! * _currFoodVals[8]).toStringAsFixed(1);
+      } else {
+        _textController.text = startingAmount!.toStringAsFixed(1);
       }
       currZeroScale = startingAmount;
     });
@@ -837,18 +1040,19 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
       setState(() {
         try {
           num newValue = double.parse(str);
-          if (newValue == 0 && (attributeID == "serving_size" || attributeID == "servings" )) {
+          if (newValue == 0 &&
+              (attributeID == "serving_size" || attributeID == "servings")) {
             newValue = .00000000000017;
           }
           if (attributeID == "serving_size") {
             if (scaleOtherUnits == true) _scaleUpFoods!(newValue / amount!);
             _currFoodVals[currEditIndex!] = "$newValue $units";
-          }
-          else if (attributeID == 'servings') {
+          } else if (attributeID == 'servings') {
             if (scaleOtherUnits == true) _scaleUpFoods!(newValue / amount!);
             _currFoodVals[currEditIndex!] = newValue;
           } else {
-            _currFoodVals[currEditIndex!] = newValue / (attributeID == "calories" && units! == "kJ" ? 4.184 : 1);
+            _currFoodVals[currEditIndex!] = newValue /
+                (attributeID == "calories" && units! == "kJ" ? 4.184 : 1);
           }
           if (attributeID == "density") {
             _scaleUpFoods!(1.0);
@@ -871,20 +1075,24 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
   void _setZeroScale() {
     setState(() {
       if (amount != null) {
-        amount! > 0 ? currZeroScale = amount! * (attributeID == "calories" && units! == "kJ" ? 4.184 : 1): null;
+        amount! > 0
+            ? currZeroScale = amount! *
+                (attributeID == "calories" && units! == "kJ" ? 4.184 : 1)
+            : null;
       }
     });
   }
-  String normalizeUnit (String value){
-      String normalizedUnit = value
-              .split(" ")[0]
-              .trim()
-              .replaceAll(RegExp(r'[^гa-zA-Z*]'), '')
-              .contains(RegExp(r'[x*]'))
-          ? value.split(" ").length > 1
-              ? value.split(" ")[1].trim().replaceAll(RegExp(r'[^гa-zA-Z]'), '')
-              : 'x'
-          : value.split(" ")[0].trim().replaceAll(RegExp(r'[^гa-zA-Z]'), '');
+
+  String normalizeUnit(String value) {
+    String normalizedUnit = value
+            .split(" ")[0]
+            .trim()
+            .replaceAll(RegExp(r'[^гa-zA-Z*]'), '')
+            .contains(RegExp(r'[x*]'))
+        ? value.split(" ").length > 1
+            ? value.split(" ")[1].trim().replaceAll(RegExp(r'[^гa-zA-Z]'), '')
+            : 'x'
+        : value.split(" ")[0].trim().replaceAll(RegExp(r'[^гa-zA-Z]'), '');
     for (String i in unitNormalization.keys) {
       if (unitNormalization[i]!.contains(normalizedUnit.toLowerCase())) {
         normalizedUnit = i;
@@ -897,10 +1105,10 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
   void _changeUnits(String? newValue) {
     if (attributeID == "calories") {
       setState(() {
-        if (units != newValue)
-        {
+        if (units != newValue) {
           units = newValue;
-          currZeroScale = currZeroScale! * (attributeID == "calories" && units! == "kJ" ? 4.184 : 1/4.184);
+          currZeroScale = currZeroScale! *
+              (attributeID == "calories" && units! == "kJ" ? 4.184 : 1 / 4.184);
         }
       });
       return;
@@ -910,11 +1118,10 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
     bool newIsWeightUnit = weightUnitsPerGram[newValue] != null;
     setState(() {
       if (oldIsWeightUnit != newIsWeightUnit) {
-        if (oldIsWeightUnit){
+        if (oldIsWeightUnit) {
           _currFoodVals[11] = true;
           widget.editSpecific(8);
-        }
-        else {
+        } else {
           _currFoodVals[11] = false;
         }
       }
@@ -924,13 +1131,19 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
       num? newScale = newIsWeightUnit
           ? weightUnitsPerGram[newValue]
           : volumeUnitsPerMl[newValue];
-      num densityFactor = _currFoodVals[11] && oldIsWeightUnit
-          ? _currFoodVals[8]
-          : 1.0;
-      num scaleFactor = newIsWeightUnit ? (1 / newScale!) : (oldScale! / newScale!) * densityFactor;
-      startingAmount = newIsWeightUnit ? scaleFactor * _currFoodVals[2] : startingAmount! * scaleFactor;
-      currZeroScale = currZeroScale! * (newIsWeightUnit ? oldScale!*scaleFactor : scaleFactor);
-      amount = newIsWeightUnit ? _currFoodVals[2] * scaleFactor : amount! * scaleFactor;
+      num densityFactor =
+          _currFoodVals[11] && oldIsWeightUnit ? _currFoodVals[8] : 1.0;
+      num scaleFactor = newIsWeightUnit
+          ? (1 / newScale!)
+          : (oldScale! / newScale!) * densityFactor;
+      startingAmount = newIsWeightUnit
+          ? scaleFactor * _currFoodVals[2]
+          : startingAmount! * scaleFactor;
+      currZeroScale = currZeroScale! *
+          (newIsWeightUnit ? oldScale! * scaleFactor : scaleFactor);
+      amount = newIsWeightUnit
+          ? _currFoodVals[2] * scaleFactor
+          : amount! * scaleFactor;
       units = newValue;
       _currFoodVals[currEditIndex!] = "$amount $units";
       _scaleUpFoods!(1);
@@ -987,15 +1200,14 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
     if ((amount == null && quantity != null) ||
         (units == null && quantity != null)) {
       List tempList;
-      quantity == "quantity not specified" ? 
-        tempList = seperateAmtAndUnits("${_currFoodVals[2]}g") : 
-        tempList = seperateAmtAndUnits(quantity);
+      quantity == "quantity not specified"
+          ? tempList = seperateAmtAndUnits("${_currFoodVals[2]}g")
+          : tempList = seperateAmtAndUnits(quantity);
       String normalUnit = normalizeUnit(tempList[1]);
       num? mlScale = volumeUnitsPerMl[normalUnit];
-      
-      if (!_currFoodVals[11] && mlScale != null)
-      {
-        _currFoodVals[8] = _currFoodVals[2] / (tempList[0]*mlScale);
+
+      if (!_currFoodVals[11] && mlScale != null) {
+        _currFoodVals[8] = _currFoodVals[2] / (tempList[0] * mlScale);
       }
       return ModifiableFoodItemData(
           lbl: label,
@@ -1008,24 +1220,26 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
           currFoodVals: _currFoodVals,
           scaleFunc: widget.scaleFunc);
     }
-    if (currZeroScale != null && currZeroScale! <= .00001){
-      if (attributeID == "serving_size"){
+    if (currZeroScale != null && currZeroScale! <= .00001) {
+      if (attributeID == "serving_size") {
         currZeroScale = seperateAmtAndUnits(widget.currFood[attributeID!])[0];
-      }
-      else{
+      } else {
         currZeroScale = widget.currFood[attributeID!];
       }
     }
-    if (!_isCurrentlyEditing){
+    if (!_isCurrentlyEditing) {
       if (_currFoodVals[11] &&
-                  attributeID != "serving_size" &&
-                  attributeID != "density" &&
-                  attributeID != "servings")
-      { 
-        _textController.text =  (amount! * _currFoodVals[8]* (attributeID == "calories" && units! == "kJ" ? 4.184 : 1)).toStringAsFixed(1);
-        
-      }else{
-        _textController.text =  (amount! * (attributeID == "calories" && units! == "kJ" ? 4.184 : 1)).toStringAsFixed(1);
+          attributeID != "serving_size" &&
+          attributeID != "density" &&
+          attributeID != "servings") {
+        _textController.text = (amount! *
+                _currFoodVals[8] *
+                (attributeID == "calories" && units! == "kJ" ? 4.184 : 1))
+            .toStringAsFixed(1);
+      } else {
+        _textController.text = (amount! *
+                (attributeID == "calories" && units! == "kJ" ? 4.184 : 1))
+            .toStringAsFixed(1);
       }
     }
     String strippedUnits = units!
@@ -1046,35 +1260,40 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
     }
     Widget attributeDisplayDefault = Row(children: [
       Expanded(
-        child: Text("$label:", overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 12)),
+        child: Text("$label:",
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 12, color: Colors.white)),
       ),
       Expanded(
         child: Text(
-          "${(((_currFoodVals[11] && attributeID != "serving_size" && attributeID != "density"  &&
-          attributeID != "servings"? amount! * _currFoodVals[8] : amount!) 
-          * (attributeID == "calories" && units! == "kJ" ? 4.184 : 1) )
-          .toStringAsFixed(1))} ${units!}",
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.end,
-          style: TextStyle(fontSize: 12)),
+            "${(((_currFoodVals[11] && attributeID != "serving_size" && attributeID != "density" && attributeID != "servings" ? amount! * _currFoodVals[8] : amount!) * (attributeID == "calories" && units! == "kJ" ? 4.184 : 1)).toStringAsFixed(1))} ${units!}",
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.end,
+            style: TextStyle(fontSize: 12, color: Colors.white)),
       ),
-      ]);
+    ]);
 
     Widget attributeDisplayEdit = Column(
       children: [
         Row(children: [
           Expanded(
-            child: Text("$label:", overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12), textAlign: TextAlign.start,),
+            child: Text(
+              "$label:",
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 12, color: Colors.white),
+              textAlign: TextAlign.start,
+            ),
           ),
           SizedBox(
             width: 50,
             child: TextField(
               keyboardType: TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(isDense: true,),
+              decoration: InputDecoration(
+                isDense: true,
+              ),
               controller: _textController,
               onChanged: _handleTextboxChange,
-              style: TextStyle(overflow: TextOverflow.ellipsis, fontSize: 12),
+              style: TextStyle(overflow: TextOverflow.ellipsis, fontSize: 12, color: Colors.white),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[\d.,]*'))
               ],
@@ -1086,8 +1305,18 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
                     isDense: true,
                     underline: SizedBox.shrink(),
                     value: units,
-                    style: TextStyle(fontSize: 12, overflow: TextOverflow.clip, color: Colors.black),
-                    onChanged: (String? newValue) => {_changeUnits(newValue), _textController.text = (amount! * (attributeID == "calories" && units! == "kJ" ? 4.184 : 1)).toStringAsFixed(1)},
+                    style: TextStyle(
+                        fontSize: 12,
+                        overflow: TextOverflow.clip,
+                        color: Colors.white),
+                    onChanged: (String? newValue) => {
+                      _changeUnits(newValue),
+                      _textController.text = (amount! *
+                              (attributeID == "calories" && units! == "kJ"
+                                  ? 4.184
+                                  : 1))
+                          .toStringAsFixed(1)
+                    },
                     items: ["kcal", "kJ"]
                         .map((unit) => DropdownMenuItem<String>(
                               value: unit,
@@ -1100,7 +1329,10 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
                         isDense: true,
                         underline: SizedBox.shrink(),
                         value: normalizedUnit,
-                        style: TextStyle(fontSize: 12, overflow: TextOverflow.clip, color: Colors.black),
+                        style: TextStyle(
+                            fontSize: 12,
+                            overflow: TextOverflow.clip,
+                            color: Colors.white),
                         onChanged: (String? newValue) => _changeUnits(newValue),
                         items: [
                           ...weightUnitsPerGram.keys
@@ -1115,14 +1347,14 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
                                   ))
                         ],
                       )
-                    : Text(units!, style: TextStyle(fontSize: 12, overflow: TextOverflow.clip)),
+                    : Text(units!,
+                        style: TextStyle(
+                            fontSize: 12, overflow: TextOverflow.clip, color: Colors.white)),
           ),
-          SizedBox(
-            width: 5
-          ),
+          SizedBox(width: 5),
           GestureDetector(
             onTap: _resetToDefaultValue,
-            child: Icon(Icons.undo),
+            child: Icon(Icons.undo, color: Colors.white),
           ),
         ]),
         SliderTheme(
@@ -1144,29 +1376,38 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
                     : num < currZeroScale! / 4 && num != 0
                         ? currZeroScale = num
                         : null),
-            value: ((amount == .00000000000017 ? 0.0: amount ?? 0.0).toDouble() 
-                * (_currFoodVals[11] &&
-                        attributeID != "serving_size" &&
-                        attributeID != "density" &&
-                        attributeID != "servings" ? _currFoodVals[8]: 1) 
-                * (attributeID == "calories" && units! == "kJ" ? 4.184 : 1)
-            ).clamp(0.0,
-                (currZeroScale! >= 0 ? currZeroScale!.toDouble() * 2.0 : 0.0)),
+            value: ((amount == .00000000000017 ? 0.0 : amount ?? 0.0)
+                        .toDouble() *
+                    (_currFoodVals[11] &&
+                            attributeID != "serving_size" &&
+                            attributeID != "density" &&
+                            attributeID != "servings"
+                        ? _currFoodVals[8]
+                        : 1) *
+                    (attributeID == "calories" && units! == "kJ" ? 4.184 : 1))
+                .clamp(
+                    0.0,
+                    (currZeroScale! >= 0
+                        ? currZeroScale!.toDouble() * 2.0
+                        : 0.0)),
             min: 0.0,
             max: (currZeroScale == 0 || currZeroScale == null)
                 ? 100.0
                 : (currZeroScale! < 0 ? 0.0 : currZeroScale!.toDouble() * 2.0),
             divisions: 1000,
             label: ((_currFoodVals[11] &&
-                        attributeID != "serving_size" &&
-                        attributeID != "density" &&
-                        attributeID != "servings"
-                    ? amount! * _currFoodVals[8]
-                    : amount!) * (attributeID == "calories" && units! == "kJ" ? 4.184 : 1)
-              ).toStringAsFixed(1),
+                            attributeID != "serving_size" &&
+                            attributeID != "density" &&
+                            attributeID != "servings"
+                        ? amount! * _currFoodVals[8]
+                        : amount!) *
+                    (attributeID == "calories" && units! == "kJ" ? 4.184 : 1))
+                .toStringAsFixed(1),
             onChanged: (double newValue) {
               setState(() {
-                if ((newValue == 0 && (attributeID == "serving_size" || attributeID == "servings" ))){
+                if ((newValue == 0 &&
+                    (attributeID == "serving_size" ||
+                        attributeID == "servings"))) {
                   newValue = .00000000000017;
                 }
                 if (attributeID == "serving_size") {
@@ -1174,24 +1415,29 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
                     _scaleUpFoods!(newValue / amount!);
                   }
                   _currFoodVals[currEditIndex!] = "$newValue $units";
-                }else if (attributeID == 'servings') {
-                  if (scaleOtherUnits == true) _scaleUpFoods!(newValue / amount!);
+                } else if (attributeID == 'servings') {
+                  if (scaleOtherUnits == true)
+                    _scaleUpFoods!(newValue / amount!);
                   _currFoodVals[currEditIndex!] = newValue;
-                }
-                else {
-                  _currFoodVals[currEditIndex!] = newValue / (attributeID == "calories" && units! == "kJ" ? 4.184 : 1);
+                } else {
+                  _currFoodVals[currEditIndex!] = newValue /
+                      (attributeID == "calories" && units! == "kJ" ? 4.184 : 1);
                 }
                 if (attributeID == "density") {
                   _scaleUpFoods!(1.0);
                 }
-                amount = newValue / (attributeID == "calories" && units! == "kJ" ? 4.184 : 1);
+                amount = newValue /
+                    (attributeID == "calories" && units! == "kJ" ? 4.184 : 1);
                 _textController.text = ((_currFoodVals[11] &&
-                            attributeID != "serving_size" &&
-                            attributeID != "density"  &&
-                  attributeID != "servings"
-                        ? amount! * _currFoodVals[8]
-                        : amount!) * (attributeID == "calories" && units! == "kJ" ? 4.184 : 1)
-                  ).toStringAsFixed(1);
+                                attributeID != "serving_size" &&
+                                attributeID != "density" &&
+                                attributeID != "servings"
+                            ? amount! * _currFoodVals[8]
+                            : amount!) *
+                        (attributeID == "calories" && units! == "kJ"
+                            ? 4.184
+                            : 1))
+                    .toStringAsFixed(1);
               });
             },
           ),
@@ -1208,51 +1454,272 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
                       });
                     },
                   ),
-                  GestureDetector(onTap: () {setState(() {scaleOtherUnits = !(scaleOtherUnits ?? false);});},
-                    child: Text("Scale other attributes", style: TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)),
+                  GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          scaleOtherUnits = !(scaleOtherUnits ?? false);
+                        });
+                      },
+                      child: Text("Scale other attributes",
+                          style: TextStyle(fontSize: 12, color: Colors.white),
+                          overflow: TextOverflow.ellipsis)),
                 ],
               )
             : SizedBox.shrink(),
       ],
     );
     return Container(
-      decoration: BoxDecoration(border: Border.all(color: Colors.white)),
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(color: const Color.fromARGB(50, 255, 255, 255)),
+        ),
+      ),
       padding: EdgeInsets.all(10),
       child: currEditing ? attributeDisplayEdit : attributeDisplayDefault,
     );
   }
 }
 
-class GraphFoodItemDataDisplay extends StatefulWidget{
+class GraphFoodItemDataDisplay extends StatefulWidget {
   final List currFoodVals;
   final List dailyValues;
 
   const GraphFoodItemDataDisplay({
     super.key,
     required this.currFoodVals,
-    this.dailyValues = const ["FDA 2000-Calorie Guide", 2000.0, 275.0, 78.0, 50.0, 100.0],
+    this.dailyValues = const [
+      "FDA 2000-Calorie Guide",
+      2000.0,
+      275.0,
+      78.0,
+      50.0,
+      100.0
+    ],
   });
 
   @override
-  State<GraphFoodItemDataDisplay> createState() => _GraphFoodItemDataDisplayState();
+  State<GraphFoodItemDataDisplay> createState() =>
+      _GraphFoodItemDataDisplayState();
 }
 
+const Map<String, Color> kNutrientColors = {
+  'Carbs': Color.fromARGB(255, 214, 182, 55), // Placeholder Green
+  'Fats': Color.fromARGB(255, 174, 63, 63), // Placeholder Yellow
+  'Protein': Color.fromARGB(255, 174, 74, 232), // Placeholder Orange
+  'Sugar': Color.fromARGB(255, 64, 176, 220), // Placeholder Light Blue
+};
+
 class _GraphFoodItemDataDisplayState extends State<GraphFoodItemDataDisplay> {
-  List? currFoodVals;
+  late List currFoodVals;
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
     currFoodVals = widget.currFoodVals;
   }
-  
+
+  @override
+  void didUpdateWidget(covariant GraphFoodItemDataDisplay oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.currFoodVals != oldWidget.currFoodVals) {
+      setState(() {
+        currFoodVals = widget.currFoodVals;
+      });
+    }
+  }
+
+  double _calculateGraphScaleMax(List<Map<String, dynamic>> data) {
+    if (data.isEmpty) return 100.0;
+    double maxPercent = 0.0;
+    for (var item in data) {
+      final value = item['value'];
+      final dailyValue = item['dailyValue'];
+      if (dailyValue > 0) {
+        maxPercent = max(maxPercent, (value / dailyValue) * 100.0);
+      }
+    }
+    if (maxPercent == 0) return 10.0;
+    
+    // For values over 100, round up to the nearest 25 or 50 for clarity
+    return (maxPercent / 10).ceil() * 10.0;
+  }
+
+  Widget _buildAxis(double scaleMax) {
+    return Column(
+      children: [
+        Container(
+          height: 1,
+          color: Colors.grey.shade500,
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Flexible(child: Text('0%', style: TextStyle(fontSize: 10, color: Colors.white, overflow: TextOverflow.clip))),
+            if (scaleMax >= 50)
+              Flexible(
+                child: Text('${(scaleMax * 0.5).toStringAsFixed(0)}%',
+                    style: TextStyle(fontSize: 10, color: Colors.white, overflow: TextOverflow.clip)),
+              ),
+            Flexible(
+              child: Text('${scaleMax.toStringAsFixed(0)}%',
+                  style: TextStyle(fontSize: 10, color: Colors.white, overflow: TextOverflow.clip)),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    num calories;
-    num carbs;
-    num fats;
-    num protein;
-    num sugar;
-    return Container();
+    final List<Map<String, dynamic>> nutrientData = [
+      {
+        'label': 'Carbs',
+        'value': currFoodVals[4],
+        'dailyValue': widget.dailyValues[2],
+        'unit': 'g'
+      },
+      {
+        'label': 'Fats',
+        'value': currFoodVals[5],
+        'dailyValue': widget.dailyValues[3],
+        'unit': 'g'
+      },
+      {
+        'label': 'Protein',
+        'value': currFoodVals[6],
+        'dailyValue': widget.dailyValues[4],
+        'unit': 'g'
+      },
+      {
+        'label': 'Sugar',
+        'value': currFoodVals[7],
+        'dailyValue': widget.dailyValues[5],
+        'unit': 'g'
+      },
+    ];
+
+    final double graphScaleMax = _calculateGraphScaleMax(nutrientData);
+
+    final String detailsString =
+        "(Carbs: ${widget.dailyValues[2].toInt()}g, Fats: ${widget.dailyValues[3].toInt()}g, Protein: ${widget.dailyValues[4].toInt()}g, Sugar: ${widget.dailyValues[5].toInt()}g)";
+
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(color: const Color.fromARGB(50, 255, 255, 255)),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            // --- Main section for aligned key/bar rows ---
+            Column(
+              children: nutrientData.map((data) {
+                final double percentage = data['dailyValue'] > 0
+                    ? (data['value'] / data['dailyValue']) * 100.0
+                    : 0.0;
+                final String valueText = '${percentage.toStringAsFixed(1)}%';
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  child: Row(
+                    children: [
+                      // --- Key Element ---
+                      Flexible(
+                        flex: 2,
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 10,
+                              height: 10,
+                              color: kNutrientColors[data['label']],
+                            ),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                '${data['label']} (${data['value'].toStringAsFixed(0)}${data['unit']})',
+                                style: TextStyle(
+                                    fontSize: 8, color: Colors.white),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: 8), // Add spacing between key and bar
+                      // --- Graph Bar Element ---
+                      Flexible(
+                        flex: 3,
+                        // ***** SOLUTION: Place LayoutBuilder here *****
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            // Now, constraints.maxWidth is the correct width for the bar
+                            final barWidth = (percentage / graphScaleMax).clamp(0, 1) * constraints.maxWidth;
+                            
+                            return Stack(
+                              alignment: Alignment.centerLeft,
+                              children: [
+                                Container(
+                                  height: 22,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade700,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                ),
+                                Container(
+                                  height: 22,
+                                  width: barWidth,
+                                  decoration: BoxDecoration(
+                                    color: kNutrientColors[data['label']],
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                ),
+                                Positioned(
+                                  left: 10,
+                                  child: Text(
+                                    valueText,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+            SizedBox(height: 5),
+
+            // --- Axis and Footer Labels ---
+            Row(
+              children: [
+                Flexible(flex: 2, child: Container()), // Spacer to align axis
+                SizedBox(width: 8),
+                Expanded(flex: 3, child: _buildAxis(graphScaleMax)),
+              ],
+            ),
+            SizedBox(height: 8),
+            Text(
+              "Percent of ${widget.dailyValues[0]}",
+              style: TextStyle(fontSize: 12, color: Colors.white),
+            ),
+            SizedBox(height: 4),
+            Text(
+              detailsString,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 10, color: Colors.grey.shade400),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

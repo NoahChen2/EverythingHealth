@@ -18,10 +18,12 @@ import 'dart:async';
 import '../log_food_page.dart';
 import 'package:http/http.dart' as http;
 
-Widget _buildFoodListItem(FoodItem food, onTap) {
-  String subtitle = food.serving_size == "quantity not specified" ? ("${food.grams.toStringAsPrecision(4)} grams, ${food.calories.toStringAsPrecision(4)} kcal") : "${food.serving_size}, ${food.calories.toStringAsPrecision(4)} kcal";
-  
-    return Container(
+Widget _buildFoodListItem(FoodItem food, onTap, onSave) {
+  String subtitle = food.serving_size == "quantity not specified"
+      ? ("${food.grams.toStringAsPrecision(4)} grams, ${food.calories.toStringAsPrecision(4)} kcal")
+      : "${food.serving_size}, ${food.calories.toStringAsPrecision(4)} kcal";
+
+  return Container(
     decoration: BoxDecoration(
       border: Border(top: BorderSide(color: Colors.grey.shade700, width: 0.5)), // Darker border
       color: const Color.fromARGB(255, 1, 19, 37), // Darker background
@@ -43,19 +45,18 @@ Widget _buildFoodListItem(FoodItem food, onTap) {
             overflow: TextOverflow.ellipsis),
       ),
       trailing: IconButton( // Changed to IconButton for better tap feedback
-        icon: const Icon(Icons.bookmark_add_outlined, color: Color.fromARGB(255, 0, 255, 64)),
-        onPressed: () {
-          print("Adding ${food.name}");
-        },
+        icon: Icon(food.isSaved ? Icons.bookmark : Icons.bookmark_outline, color: Colors.white),
+        onPressed: onSave,
       ),
-      onTap: onTap
+      onTap: onTap,
     ),
   );
 }
 
 class SearchFoodPage extends StatefulWidget {
-  final Function addingFoodFunc;
-  const SearchFoodPage({super.key, required this.addingFoodFunc});
+  final Function(FoodItem) addFoodFunc;
+  final Future<void> Function(FoodItem) saveFoodFunc;
+  const SearchFoodPage({super.key, required this.addFoodFunc, required this.saveFoodFunc});
 
   @override
   State<SearchFoodPage> createState() => _SearchFoodPageState();
@@ -97,7 +98,7 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
       _isLoading = true;
       _loadError = '';
     });
-
+    
     try {
       // 1. Load the raw JSON string
       _updateDisplayedFoods("");
@@ -576,7 +577,11 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
                       itemCount: _displayedFoods.length,
                       itemBuilder: (BuildContext context, int index) {
                         final food = _displayedFoods[index]; // food is already a FoodItem
-                        return _buildFoodListItem(food, widget.addingFoodFunc(food)); 
+                        return _buildFoodListItem(
+                          food,
+                          widget.addFoodFunc(food),
+                          () {widget.saveFoodFunc(food); setState((){});},
+                        ); 
                       },
                     ),
                   ),
