@@ -174,9 +174,11 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
               final String name = foodMap['normalized_name'] as String? ?? '';
               return searchTerms.every((term) => name.contains(term));
             }).toList();
+        final allSavedFoods = await isar.savedFoods.where().findAll();
+        final List<FoodItem> savedFoodItems = allSavedFoods.map((food) => FoodItem.fromJson(food.toJson())).toList();
         for (var jsonMap in matchedJsonMaps) {
           try {
-            final String normalizedName = jsonMap['normalized_name'] ?? '';
+            final String name = jsonMap['name'] ?? '';
             final String serving_size = jsonMap['serving_size'] ?? '';
             final double grams = jsonMap['grams'] ?? 0;
             final double calories = jsonMap['calories'] ?? 0;
@@ -187,24 +189,21 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
             final double servings = jsonMap['servings'] ?? 1.0;
             
             // 3. Perform the Isar search for each item, just like in _apiFoodSearch
-            final existingFood = await isar.savedFoods
-                .filter()
-                .normalized_nameEqualTo(normalizedName)
-                .serving_sizeEqualTo(serving_size)
-                .gramsEqualTo(grams)
-                .caloriesEqualTo(calories)
-                .carbsEqualTo(carbs)
-                .fatsEqualTo(fats)
-                .proteinEqualTo(protein)
-                .sugarEqualTo(sugar)
-                .servingsEqualTo(servings)
-                .findFirst();
-
-            if (existingFood != null) {
-              // If a saved version exists, convert it to a FoodItem and add it to our list
-              newDisplayedFoods.add(FoodItem.fromJson(existingFood.toJson()));
-            } else {
-              // Otherwise, use the data from the local JSON file
+            try{
+              final matchingSavedFood = savedFoodItems.firstWhere((saved) =>
+                  saved.name == name &&
+                  saved.serving_size == serving_size &&
+                  saved.grams == grams &&
+                  saved.calories == calories &&
+                  saved.carbs == carbs &&
+                  saved.fats == fats &&
+                  saved.protein == protein &&
+                  saved.sugar == sugar &&
+                  saved.servings == servings
+              );
+              newDisplayedFoods.add(matchingSavedFood);
+            }
+            catch(e){
               newDisplayedFoods.add(FoodItem.fromJson(jsonMap));
             }
           } catch (e) {

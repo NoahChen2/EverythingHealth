@@ -30,6 +30,7 @@ class SavedFood {
   late String image_small_url;
   late String img_url;
   late double servings;
+  late int time;
 
   // The constructor no longer requires 'id'.
   SavedFood({
@@ -49,6 +50,7 @@ class SavedFood {
     this.image_small_url = "",
     this.img_url = "",
     this.servings = 1.0,
+    required this.time,
   });
 
   factory SavedFood.fromJson(Map<String, dynamic> json) {
@@ -71,6 +73,7 @@ class SavedFood {
       image_small_url: json['image_small_url'] ?? json['image_url'] ?? "",
       img_url: json['image_url'] ?? json['image_small_url'] ?? "",
       servings: (json['servings'] ?? 1.0).toDouble(),
+      time: json['time'] ?? DateTime.now().toUtc().difference(DateTime.utc(1970, 1, 1)).inSeconds ?? 0,
     );
   }
   
@@ -93,6 +96,8 @@ class SavedFood {
         'image_small_url': image_small_url,
         'img_url': img_url,
         'servings': servings,
+        'time': time,
+        'isSaved': true,
       };
   }
   // Helper function is now static and part of the class

@@ -96,6 +96,11 @@ const SavedFoodSchema = CollectionSchema(
       id: 15,
       name: r'sugar',
       type: IsarType.double,
+    ),
+    r'time': PropertySchema(
+      id: 16,
+      name: r'time',
+      type: IsarType.long,
     )
   },
   estimateSize: _savedFoodEstimateSize,
@@ -175,6 +180,7 @@ void _savedFoodSerialize(
   writer.writeString(offsets[13], object.serving_size);
   writer.writeDouble(offsets[14], object.servings);
   writer.writeDouble(offsets[15], object.sugar);
+  writer.writeLong(offsets[16], object.time);
 }
 
 SavedFood _savedFoodDeserialize(
@@ -200,6 +206,7 @@ SavedFood _savedFoodDeserialize(
     serving_size: reader.readString(offsets[13]),
     servings: reader.readDoubleOrNull(offsets[14]) ?? 1.0,
     sugar: reader.readDouble(offsets[15]),
+    time: reader.readLong(offsets[16]),
   );
   object.id = id;
   return object;
@@ -244,6 +251,8 @@ P _savedFoodDeserializeProp<P>(
       return (reader.readDoubleOrNull(offset) ?? 1.0) as P;
     case 15:
       return (reader.readDouble(offset)) as P;
+    case 16:
+      return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -1814,6 +1823,59 @@ extension SavedFoodQueryFilter
       ));
     });
   }
+
+  QueryBuilder<SavedFood, SavedFood, QAfterFilterCondition> timeEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'time',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedFood, SavedFood, QAfterFilterCondition> timeGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'time',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedFood, SavedFood, QAfterFilterCondition> timeLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'time',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SavedFood, SavedFood, QAfterFilterCondition> timeBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'time',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
 }
 
 extension SavedFoodQueryObject
@@ -2012,6 +2074,18 @@ extension SavedFoodQuerySortBy on QueryBuilder<SavedFood, SavedFood, QSortBy> {
   QueryBuilder<SavedFood, SavedFood, QAfterSortBy> sortBySugarDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'sugar', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SavedFood, SavedFood, QAfterSortBy> sortByTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'time', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SavedFood, SavedFood, QAfterSortBy> sortByTimeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'time', Sort.desc);
     });
   }
 }
@@ -2221,6 +2295,18 @@ extension SavedFoodQuerySortThenBy
       return query.addSortBy(r'sugar', Sort.desc);
     });
   }
+
+  QueryBuilder<SavedFood, SavedFood, QAfterSortBy> thenByTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'time', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SavedFood, SavedFood, QAfterSortBy> thenByTimeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'time', Sort.desc);
+    });
+  }
 }
 
 extension SavedFoodQueryWhereDistinct
@@ -2327,6 +2413,12 @@ extension SavedFoodQueryWhereDistinct
       return query.addDistinctBy(r'sugar');
     });
   }
+
+  QueryBuilder<SavedFood, SavedFood, QDistinct> distinctByTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'time');
+    });
+  }
 }
 
 extension SavedFoodQueryProperty
@@ -2430,6 +2522,12 @@ extension SavedFoodQueryProperty
   QueryBuilder<SavedFood, double, QQueryOperations> sugarProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'sugar');
+    });
+  }
+
+  QueryBuilder<SavedFood, int, QQueryOperations> timeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'time');
     });
   }
 }

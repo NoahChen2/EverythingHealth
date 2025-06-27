@@ -67,38 +67,43 @@ const HistoryFoodSchema = CollectionSchema(
       name: r'img_url',
       type: IsarType.string,
     ),
-    r'name': PropertySchema(
+    r'meal': PropertySchema(
       id: 10,
+      name: r'meal',
+      type: IsarType.string,
+    ),
+    r'name': PropertySchema(
+      id: 11,
       name: r'name',
       type: IsarType.string,
     ),
     r'normalized_name': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'normalized_name',
       type: IsarType.string,
     ),
     r'protein': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'protein',
       type: IsarType.double,
     ),
     r'serving_size': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'serving_size',
       type: IsarType.string,
     ),
     r'servings': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'servings',
       type: IsarType.double,
     ),
     r'sugar': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'sugar',
       type: IsarType.double,
     ),
     r'time': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'time',
       type: IsarType.long,
     )
@@ -152,6 +157,7 @@ int _historyFoodEstimateSize(
   var bytesCount = offsets.last;
   bytesCount += 3 + object.image_small_url.length * 3;
   bytesCount += 3 + object.img_url.length * 3;
+  bytesCount += 3 + object.meal.length * 3;
   bytesCount += 3 + object.name.length * 3;
   bytesCount += 3 + object.normalized_name.length * 3;
   bytesCount += 3 + object.serving_size.length * 3;
@@ -174,13 +180,14 @@ void _historyFoodSerialize(
   writer.writeDouble(offsets[7], object.grams);
   writer.writeString(offsets[8], object.image_small_url);
   writer.writeString(offsets[9], object.img_url);
-  writer.writeString(offsets[10], object.name);
-  writer.writeString(offsets[11], object.normalized_name);
-  writer.writeDouble(offsets[12], object.protein);
-  writer.writeString(offsets[13], object.serving_size);
-  writer.writeDouble(offsets[14], object.servings);
-  writer.writeDouble(offsets[15], object.sugar);
-  writer.writeLong(offsets[16], object.time);
+  writer.writeString(offsets[10], object.meal);
+  writer.writeString(offsets[11], object.name);
+  writer.writeString(offsets[12], object.normalized_name);
+  writer.writeDouble(offsets[13], object.protein);
+  writer.writeString(offsets[14], object.serving_size);
+  writer.writeDouble(offsets[15], object.servings);
+  writer.writeDouble(offsets[16], object.sugar);
+  writer.writeLong(offsets[17], object.time);
 }
 
 HistoryFood _historyFoodDeserialize(
@@ -200,13 +207,14 @@ HistoryFood _historyFoodDeserialize(
     grams: reader.readDouble(offsets[7]),
     image_small_url: reader.readStringOrNull(offsets[8]) ?? "",
     img_url: reader.readStringOrNull(offsets[9]) ?? "",
-    name: reader.readString(offsets[10]),
-    normalized_name: reader.readString(offsets[11]),
-    protein: reader.readDouble(offsets[12]),
-    serving_size: reader.readString(offsets[13]),
-    servings: reader.readDoubleOrNull(offsets[14]) ?? 1,
-    sugar: reader.readDouble(offsets[15]),
-    time: reader.readLong(offsets[16]),
+    meal: reader.readStringOrNull(offsets[10]) ?? "",
+    name: reader.readString(offsets[11]),
+    normalized_name: reader.readString(offsets[12]),
+    protein: reader.readDouble(offsets[13]),
+    serving_size: reader.readString(offsets[14]),
+    servings: reader.readDoubleOrNull(offsets[15]) ?? 1,
+    sugar: reader.readDouble(offsets[16]),
+    time: reader.readLong(offsets[17]),
   );
   object.id = id;
   return object;
@@ -240,18 +248,20 @@ P _historyFoodDeserializeProp<P>(
     case 9:
       return (reader.readStringOrNull(offset) ?? "") as P;
     case 10:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset) ?? "") as P;
     case 11:
       return (reader.readString(offset)) as P;
     case 12:
-      return (reader.readDouble(offset)) as P;
-    case 13:
       return (reader.readString(offset)) as P;
-    case 14:
-      return (reader.readDoubleOrNull(offset) ?? 1) as P;
-    case 15:
+    case 13:
       return (reader.readDouble(offset)) as P;
+    case 14:
+      return (reader.readString(offset)) as P;
+    case 15:
+      return (reader.readDoubleOrNull(offset) ?? 1) as P;
     case 16:
+      return (reader.readDouble(offset)) as P;
+    case 17:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1249,6 +1259,137 @@ extension HistoryFoodQueryFilter
     });
   }
 
+  QueryBuilder<HistoryFood, HistoryFood, QAfterFilterCondition> mealEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'meal',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryFood, HistoryFood, QAfterFilterCondition> mealGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'meal',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryFood, HistoryFood, QAfterFilterCondition> mealLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'meal',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryFood, HistoryFood, QAfterFilterCondition> mealBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'meal',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryFood, HistoryFood, QAfterFilterCondition> mealStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'meal',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryFood, HistoryFood, QAfterFilterCondition> mealEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'meal',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryFood, HistoryFood, QAfterFilterCondition> mealContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'meal',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryFood, HistoryFood, QAfterFilterCondition> mealMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'meal',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryFood, HistoryFood, QAfterFilterCondition> mealIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'meal',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<HistoryFood, HistoryFood, QAfterFilterCondition>
+      mealIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'meal',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<HistoryFood, HistoryFood, QAfterFilterCondition> nameEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -2026,6 +2167,18 @@ extension HistoryFoodQuerySortBy
     });
   }
 
+  QueryBuilder<HistoryFood, HistoryFood, QAfterSortBy> sortByMeal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'meal', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HistoryFood, HistoryFood, QAfterSortBy> sortByMealDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'meal', Sort.desc);
+    });
+  }
+
   QueryBuilder<HistoryFood, HistoryFood, QAfterSortBy> sortByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -2249,6 +2402,18 @@ extension HistoryFoodQuerySortThenBy
     });
   }
 
+  QueryBuilder<HistoryFood, HistoryFood, QAfterSortBy> thenByMeal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'meal', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HistoryFood, HistoryFood, QAfterSortBy> thenByMealDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'meal', Sort.desc);
+    });
+  }
+
   QueryBuilder<HistoryFood, HistoryFood, QAfterSortBy> thenByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -2402,6 +2567,13 @@ extension HistoryFoodQueryWhereDistinct
     });
   }
 
+  QueryBuilder<HistoryFood, HistoryFood, QDistinct> distinctByMeal(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'meal', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<HistoryFood, HistoryFood, QDistinct> distinctByName(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -2515,6 +2687,12 @@ extension HistoryFoodQueryProperty
   QueryBuilder<HistoryFood, String, QQueryOperations> img_urlProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'img_url');
+    });
+  }
+
+  QueryBuilder<HistoryFood, String, QQueryOperations> mealProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'meal');
     });
   }
 

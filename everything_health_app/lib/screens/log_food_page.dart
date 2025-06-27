@@ -7,6 +7,7 @@ import 'package:flutter/rendering.dart';
 import '../widgets/nav_bars.dart'; // Import MyTopNavigationBar
 import '../widgets/nav_item_builder.dart'; // Import buildNavItem
 import 'log_food_screens/search_food_page.dart'; // Import SearchFoodPage
+import 'log_food_screens/library_food_page.dart';
 import '../widgets/choose_item.dart';
 import 'dart:math';
 
@@ -63,7 +64,9 @@ class _LogFoodPageState extends State<LogFoodPage> {
     else{
       print('Saving... ${food.name}');
       food.isSaved = true;
-      SavedFood newEntry = SavedFood.fromJson(food.toJson());
+      Map<String, dynamic> tempFoodJson = food.toJson();
+      tempFoodJson['time'] = DateTime.now().toUtc().difference(DateTime.utc(1970, 1, 1)).inSeconds;
+      SavedFood newEntry = SavedFood.fromJson(tempFoodJson);
       
       await isar.writeTxn(() async {
         // Take your 'newEntry' paper and put it in the 'historyFoods' binder
@@ -116,7 +119,7 @@ class _LogFoodPageState extends State<LogFoodPage> {
       SearchFoodPage(addFoodFunc: _addingFoodFunc, saveFoodFunc: _addFoodToSaved),
       Container(color: Colors.blueAccent, child: const Center(child: Text("Scan Barcode Content"))),
       Container(color: Colors.orangeAccent, child: const Center(child: Text("History Content"))),
-      Container(color: Colors.blueGrey, child: const Center(child: Text("Favorites Content"))),
+      LibraryFoodPage(addFoodFunc: _addingFoodFunc, saveFoodFunc: _addFoodToSaved),
     ];
 
     Widget contentPage;
@@ -175,6 +178,7 @@ class FoodItem {
   num time;
   num servings;
   bool isSaved;
+  String meal;
 
   FoodItem({
     required this.name,
@@ -196,6 +200,7 @@ class FoodItem {
     this.time = 0,
     this.servings = 1,
     this.isSaved = false,
+    this.meal = "",
   }) : color = color ?? HSLColor.fromAHSL(1.0, random.nextInt(360).toDouble(), .38, .50).toColor(); // Provide a default color if none is given
   
   void operator []=(String key, dynamic value) {
@@ -238,6 +243,8 @@ class FoodItem {
         servings = value;
       case 'isSaved':
         isSaved = value;
+      case 'meal':
+        meal = value;
       default:
         throw ArgumentError('Unknown attribute: $key');
     }
@@ -283,6 +290,8 @@ class FoodItem {
         return servings;
       case 'isSaved':
         return isSaved;
+      case 'meal':
+        return meal;
       default:
         throw ArgumentError('Unknown attribute: $key');
     }
@@ -308,6 +317,8 @@ class FoodItem {
       img_url: json['image_url'] ?? json['image_small_url'] ?? "NO_IMAGE_FOUND",
       time: json['time'] ?? 0,
       servings: json['servings'] ?? 1,
+      meal: json['meal'] ?? "",
+      isSaved: json['isSaved'] ?? false,
     );
   }
 
@@ -336,6 +347,7 @@ class FoodItem {
       'img_url': img_url,
       'time': time,
       'servings': servings,
+      'meal': meal,
     };
   }
 }

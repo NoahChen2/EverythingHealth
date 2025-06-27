@@ -33,6 +33,7 @@ class HistoryFood {
   late String img_url;
   late int time;
   late double servings;
+  late String meal;
 
   // Constructor name is automatically updated with the class name
   HistoryFood({
@@ -53,6 +54,7 @@ class HistoryFood {
     this.img_url = "",
     required this.time,
     this.servings = 1,
+    this.meal = "",
   });
 
   // CHANGE 3: Update the factory constructor name
@@ -79,6 +81,7 @@ class HistoryFood {
       img_url: json['image_url'] ?? json['image_small_url'] ?? "",
       time: json['time'] ?? DateTime.now().toUtc().difference(DateTime.utc(1970, 1, 1)).inSeconds ?? 0,
       servings: (json['servings'] ?? 1.0).toDouble(),
+      meal: json['meal'] ?? "",
     );
   }
   Map<String, dynamic> toJson(){
@@ -101,6 +104,7 @@ class HistoryFood {
         'img_url': img_url,
         'time': time,
         'servings': servings,
+        'meal': meal,
       };
   }
   // This helper function is part of the new class now
