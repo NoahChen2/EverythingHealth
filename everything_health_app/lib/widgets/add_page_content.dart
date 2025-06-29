@@ -77,7 +77,7 @@ class AddPage extends StatelessWidget {
       double currentOrangeHeight = (defaultOrangeHeight + upwardExpansion)
           .clamp(0.0, pageHeight * 0.75); // Max 75% effective height
 
-      double menuOptionWidth = (pageWidth - 20) / 3;
+      double menuOptionWidth = (pageWidth - 20) / 4;
       double menuOptionHeight = menuOptionWidth * (2 / 3);
       menuOptionHeight = math.min(menuOptionHeight, (defaultOrangeHeight - 80) / 3);
 
@@ -128,39 +128,26 @@ class AddPage extends StatelessWidget {
                               _menuOptionRectangle(
                                   height: menuOptionHeight,
                                   width: menuOptionWidth,
-                                  icon: Icons.qr_code_scanner,
-                                  label: "Barcode",
+                                  icon: Icons.camera,
+                                  label: "Scan",
                                   colorUsed: Colors.green,
                                   onTap: () => onLogFoodSelection(1)),
                               _menuOptionRectangle(
                                   height: menuOptionHeight,
                                   width: menuOptionWidth,
-                                  icon: Icons.camera,
-                                  label: "Photo",
+                                  icon: Icons.app_registration_rounded,
+                                  label: "Manual",
                                   colorUsed: const Color.fromARGB(255, 8, 165, 237),
                                   onTap: () => onLogFoodSelection(2)),
-                            ]
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
                               _menuOptionRectangle(
                                   height: menuOptionHeight,
                                   width: menuOptionWidth,
-                                  icon: Icons.history, // Changed Icon
-                                  label: "History", // Changed Label
+                                  icon: Icons.shelves, // Changed Icon
+                                  label: "Library", // Changed Label
                                   colorUsed: Colors.deepOrange, // Changed Color
                                   onTap: () =>
                                       onLogFoodSelection(3)), // Changed Index
-                              _menuOptionRectangle(
-                                  height: menuOptionHeight,
-                                  width: menuOptionWidth,
-                                  icon: Icons.bookmark, // Changed Icon
-                                  label: "Saved", // Changed Label
-                                  colorUsed: Colors.yellowAccent, // Changed Color
-                                  onTap: () =>
-                                      onLogFoodSelection(4)), // Changed Index
-                            ],
+                            ]
                           ),
                           const SizedBox(height: 5),
                           const Text("Log Excercise",

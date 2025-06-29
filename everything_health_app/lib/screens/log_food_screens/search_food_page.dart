@@ -513,7 +513,7 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
   @override
   Widget build(BuildContext context) {
     return Container(
-        padding: EdgeInsets.only(top: 60),
+        margin: EdgeInsets.only(top: 60),
         color: const Color.fromARGB(255, 0, 36, 72),
         child: 
           Column(

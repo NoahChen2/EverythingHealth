@@ -13,16 +13,12 @@ class ChooseFoodItem extends StatefulWidget {
   final FoodItem food;
   final Function close;
   final Function(String) goHome;
-  final Function(FoodItem) addFoodToSaved;
-  final Function(FoodItem) addFoodToHistory;
 
   const ChooseFoodItem(
       {super.key,
       required this.food,
       required this.close,
-      required this.goHome,
-      required this.addFoodToSaved,
-      required this.addFoodToHistory});
+      required this.goHome,});
 
   @override
   State<ChooseFoodItem> createState() => _ChooseFoodItemState();
@@ -106,6 +102,9 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
         isSaved: true,
         time:
           DateTime.now().toUtc().difference(DateTime.utc(1970, 1, 1)).inSeconds,
+        img_url: widget.food.img_url,
+        image_small_url: widget.food.image_small_url,
+        meal: _currFoodVals![14],
       );
       print('Saving... ${tempFood.name}');
       SavedFood newEntry = SavedFood.fromJson(tempFood.toJson());
@@ -186,6 +185,8 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
       servings: _currFoodVals![12],
       code: _currFoodVals![13],
       meal: _currFoodVals![14],
+      img_url: widget.food.img_url,
+      image_small_url: widget.food.image_small_url,
     );
     HistoryFood newEntry = HistoryFood.fromJson(tempFood.toJson());
     await isar.writeTxn(() async {
@@ -223,6 +224,12 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
         densityRequired: _currFoodVals![11],
         servings: _currFoodVals![12],
         code: _currFoodVals![13],
+        isSaved: true,
+        time:
+          DateTime.now().toUtc().difference(DateTime.utc(1970, 1, 1)).inSeconds,
+        img_url: widget.food.img_url,
+        image_small_url: widget.food.image_small_url,
+        meal: _currFoodVals![14],
       );
       print('Saving... ${tempFood.name}');
       SavedFood newEntry = SavedFood.fromJson(tempFood.toJson());

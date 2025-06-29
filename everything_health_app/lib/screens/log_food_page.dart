@@ -1,5 +1,6 @@
 // ignore_for_file: non_constant_identifier_names
 import 'package:everything_health_app/main.dart';
+import 'package:everything_health_app/models/history_foods.dart';
 import 'package:everything_health_app/models/saved_foods.dart';
 import 'package:flutter/material.dart';
 // ignore: unnecessary_import
@@ -60,12 +61,16 @@ class _LogFoodPageState extends State<LogFoodPage> {
       await isar.writeTxn(() async {
         await isar.savedFoods.delete(food.id);
       });
+      print('Unsaving... ${food.name}');
     }
     else{
       print('Saving... ${food.name}');
       food.isSaved = true;
       Map<String, dynamic> tempFoodJson = food.toJson();
-      tempFoodJson['time'] = DateTime.now().toUtc().difference(DateTime.utc(1970, 1, 1)).inSeconds;
+      if (tempFoodJson['time'] == 0)
+      {
+        tempFoodJson['time'] = DateTime.now().toUtc().difference(DateTime.utc(1970, 1, 1)).inSeconds;
+      }
       SavedFood newEntry = SavedFood.fromJson(tempFoodJson);
       
       await isar.writeTxn(() async {
@@ -76,9 +81,16 @@ class _LogFoodPageState extends State<LogFoodPage> {
     }
   }
 
-  void _addFoodToHistory(FoodItem food)
+  Future<void> _addFoodToHistory(FoodItem food) async
   {
-    print(food);
+    food.time = DateTime.now().toUtc().difference(DateTime.utc(1970, 1, 1)).inSeconds;
+    HistoryFood newEntry = HistoryFood.fromJson(food.toJson());
+    await isar.writeTxn(() async {
+      // Take your 'newEntry' paper and put it in the 'historyFoods' binder
+      await isar.historyFoods.put(newEntry);
+    });
+    Function func = widget.goHome("Food Added");
+    func();
   }
 
   @override
@@ -101,25 +113,25 @@ class _LogFoodPageState extends State<LogFoodPage> {
       buildNavItem(
           icon: Icons.camera,
           label: "Scan",
-          colorUsed: widget.logFoodIndex == 2 ? selectedColor : nonSelectedColor,
-          onTap: () => widget.onLogFoodSelection(2)),
+          colorUsed: widget.logFoodIndex == 1 ? selectedColor : nonSelectedColor,
+          onTap: () => widget.onLogFoodSelection(1)),
       buildNavItem(
           icon: Icons.app_registration_rounded,
           label: "Manual",
+          colorUsed: widget.logFoodIndex == 2 ? selectedColor : nonSelectedColor,
+          onTap: () => widget.onLogFoodSelection(2)),
+      buildNavItem(
+          icon: Icons.shelves,
+          label: "Saved",
           colorUsed: widget.logFoodIndex == 3 ? selectedColor : nonSelectedColor,
           onTap: () => widget.onLogFoodSelection(3)),
-      buildNavItem(
-          icon: Icons.bookmark,
-          label: "Saved",
-          colorUsed: widget.logFoodIndex == 4 ? selectedColor : nonSelectedColor,
-          onTap: () => widget.onLogFoodSelection(4)),
     ];
 
     var logFoodPagesContent = [ // Specific content for each sub-page
       SearchFoodPage(addFoodFunc: _addingFoodFunc, saveFoodFunc: _addFoodToSaved),
       Container(color: Colors.blueAccent, child: const Center(child: Text("Scan Barcode Content"))),
-      Container(color: Colors.orangeAccent, child: const Center(child: Text("History Content"))),
-      LibraryFoodPage(addFoodFunc: _addingFoodFunc, saveFoodFunc: _addFoodToSaved),
+      Container(color: Colors.orangeAccent, child: const Center(child: Text("Manual Add"))),
+      LibraryFoodPage(addFoodFunc: _addingFoodFunc, saveFoodFunc: _addFoodToSaved, addFoodToHistory: _addFoodToHistory,),
     ];
 
     Widget contentPage;
@@ -138,10 +150,6 @@ class _LogFoodPageState extends State<LogFoodPage> {
     return Material( // Add Material for background and theming
       child: Stack(children: [
         Container(
-          color: Theme.of(context).colorScheme.surface, // Use a theme color
-          child: contentPage,
-        ),
-        Container(
           height: 60,
           decoration: BoxDecoration(
             border: Border(bottom: BorderSide(color: Colors.grey.shade300, width: 1.0)),
@@ -151,7 +159,8 @@ class _LogFoodPageState extends State<LogFoodPage> {
             navItems: navItems,
           ),
         ),
-        ChooseFoodItem(food: _addingFood, close: _closeAddFood, goHome: widget.goHome, addFoodToSaved: _addFoodToSaved, addFoodToHistory: _addFoodToHistory)
+        contentPage,
+        ChooseFoodItem(food: _addingFood, close: _closeAddFood, goHome: widget.goHome)
       ]),
     );
   }
