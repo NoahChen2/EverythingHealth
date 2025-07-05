@@ -9,6 +9,8 @@ import '../widgets/nav_bars.dart'; // Import MyTopNavigationBar
 import '../widgets/nav_item_builder.dart'; // Import buildNavItem
 import 'log_food_screens/search_food_page.dart'; // Import SearchFoodPage
 import 'log_food_screens/library_food_page.dart';
+import 'log_food_screens/manual_food_page.dart';
+import 'log_food_screens/scan_food_page.dart';
 import '../widgets/choose_item.dart';
 import 'dart:math';
 
@@ -129,8 +131,8 @@ class _LogFoodPageState extends State<LogFoodPage> {
 
     var logFoodPagesContent = [ // Specific content for each sub-page
       SearchFoodPage(addFoodFunc: _addingFoodFunc, saveFoodFunc: _addFoodToSaved),
-      Container(color: Colors.blueAccent, child: const Center(child: Text("Scan Barcode Content"))),
-      Container(color: Colors.orangeAccent, child: const Center(child: Text("Manual Add"))),
+      ScanFoodPage(addFoodFunc: _addingFoodFunc,),
+      ManualFoodPage(addFoodFunc: _addingFoodFunc,),
       LibraryFoodPage(addFoodFunc: _addingFoodFunc, saveFoodFunc: _addFoodToSaved, addFoodToHistory: _addFoodToHistory,),
     ];
 
