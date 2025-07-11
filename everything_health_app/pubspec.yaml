@@ -18,13 +18,14 @@ dependencies:
   isar: ^3.1.0+1
   isar_flutter_libs: ^3.1.0+1
   camera: ^0.11.1
-  path_provider: ^2.1.3
+  path_provider: ^2.1.5
   provider: ^6.1.2
   http: ^1.2.0
   auto_size_text: ^3.0.0
   english_words: ^4.0.0
   intl: ^0.20.2
   mobile_scanner: ^5.1.1 # Add this line
+  image: ^4.5.4
 
 dev_dependencies:
   flutter_test:

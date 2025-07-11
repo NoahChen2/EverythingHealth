@@ -1,9 +1,13 @@
 // ignore_for_file: non_constant_identifier_names, no_leading_underscores_for_local_identifiers
 
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:image/image.dart' as img;
+import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
@@ -36,6 +40,8 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
   String foundFoodStatus = "none";
   FoodItem? food;
   int elementState = 0;
+  XFile? _capturedImage;
+  bool _isCapturing = false;
 
   @override
   void initState() {
@@ -308,6 +314,7 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
         _isProcessingScan = false;
       });
       _scannerController.stop();
+      _initializeCamera();
     }
   }
 
@@ -348,7 +355,104 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
       });
     }
   }
+  
+  // In _ScanFoodPageState
 
+  Future<void> _onCapturePressed() async {
+    if (_isCapturing) return;
+
+    setState(() { _isCapturing = true; });
+
+    try {
+      // Take the picture
+      final XFile image = await _controller!.takePicture();
+      
+      // Update the state to show the confirmation UI
+      setState(() {
+        _capturedImage = image;
+      });
+    } catch (e) {
+      print("Error capturing picture: $e");
+    } finally {
+      setState(() { _isCapturing = false; });
+    }
+  }
+
+  // This function handles the "Use Photo" button press
+  Future<void> _onUsePhotoPressed() async {
+    
+    if (_capturedImage == null) return;
+    
+    setState(() { _isCapturing = true; });
+
+    try {
+      // This is your previous processing logic
+      final String resizedPath = await _resizePhoto(_capturedImage!.path);
+      final Uint8List imageBytes = await File(resizedPath).readAsBytes();
+
+      print('SUCCESS: Resized image is now in RAM.');
+      print('Image size: ${imageBytes.lengthInBytes / 1024} KB');
+      
+      // TODO: Send 'imageBytes' to your food analysis API.
+
+      // After processing, return to the main menu
+      setState(() {
+        elementState = 0;
+        _capturedImage = null; // Clear the image
+      });
+
+    } catch (e) {
+      print("Error processing image: $e");
+    } finally {
+      setState(() { _isCapturing = false; });
+    }
+    _initializeCamera();
+  }
+
+  // This function handles the "Retake" button press
+  void _onRetakePressed() {
+    setState(() {
+      _capturedImage = null; // Clear the image to go back to the camera preview
+    });
+  }
+  Future<String> _resizePhoto(String filePath) async {
+    // Read the original image file into memory
+    final originalFile = File(filePath);
+    final imageBytes = await originalFile.readAsBytes();
+
+    // Decode the image using the 'image' package
+    final img.Image? originalImage = img.decodeImage(imageBytes);
+
+    if (originalImage == null) {
+      // Handle error if image can't be decoded
+      print("Error: Could not decode image.");
+      return filePath;
+    }
+
+    // Crop the image to a square from the center
+    final cropSize = min(originalImage.width, originalImage.height);
+    final offsetX = (originalImage.width - cropSize) ~/ 2;
+    final offsetY = (originalImage.height - cropSize) ~/ 2;
+    
+    final img.Image croppedImage = img.copyCrop(
+      originalImage,
+      x: offsetX,
+      y: offsetY,
+      width: cropSize,
+      height: cropSize,
+    );
+
+    // Get a temporary directory to save the new file
+    final tempDir = await getTemporaryDirectory();
+    final newPath = '${tempDir.path}/resized_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+    // Save the cropped image to the new path
+    final newFile = File(newPath);
+    await newFile.writeAsBytes(img.encodeJpg(croppedImage));
+
+    // Return the path of the new, resized image file
+    return newFile.path;
+  }
   @override
   void dispose() {
     super.dispose();
@@ -680,6 +784,9 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
               return Stack(
                 children: [
                   Center(
+                    child: Text("Camera Loading...\n\n\n", style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w500), textAlign: TextAlign.center, overflow: TextOverflow.clip),
+                  ),
+                  Center(
                     child: SizedBox(
                       width: cropSize,
                       height: cropSize,
@@ -716,7 +823,7 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                       top: 5,
                       left: 5,
                       child: GestureDetector(
-                          onTap: () => setState(() => elementState = 0),
+                          onTap: () {setState(() => elementState = 0);_scannerController.stop();_initializeCamera();},
                           child: Container(
                               height: 50,
                               width: 50,
@@ -730,20 +837,12 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
             },
           ),
         ),
-
-        /* Container(
-            margin: EdgeInsets.only(top: 60),
-            child: 
-              MobileScanner(
-                controller: _scannerController,
-                onDetect: (capture) => barcodeDetected(capture),
-              ) 
-        )*/
       );
     } else {
       return Scaffold(
         backgroundColor:
-            const Color.fromARGB(255, 0, 36, 72), // Match your color
+        _capturedImage == null ?
+            const Color.fromARGB(255, 0, 36, 72) : const Color.fromARGB(255, 0, 17, 35), // Match your color
         body: Container(
           margin: EdgeInsets.only(top: 60),
           child: _controller == null || _initializeControllerFuture == null
@@ -763,64 +862,154 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                               child: Icon(Icons.arrow_back_ios,
                                   color: Colors.white)))),
                 ])
-              : LayoutBuilder(
-                  builder: (context, constraints) {
-                    double pageWidth = constraints.maxWidth;
-                    double pageHeight = constraints.maxHeight;
-                    double cropSize = min(pageWidth, pageHeight);
+              : 
+              FutureBuilder<void>(
+                future: _initializeControllerFuture,
+                builder: (context, snapshot) {
+                  // Check if the future is complete.
+                  if (snapshot.connectionState == ConnectionState.done) {
                     return Stack(
+                      fit: StackFit.expand,
                       children: [
-                        Center(
-                          child: SizedBox(
-                            width: cropSize,
-                            height: cropSize,
-                            child: ClipRect(
-                              child: OverflowBox(
-                                alignment: Alignment.center,
-                                child: FittedBox(
-                                  fit: BoxFit.fitWidth,
-                                  child: Container(
-                                    width: cropSize,
-                                    height: cropSize *
-                                        (cropSize == pageWidth
-                                            ? _controller!.value.aspectRatio
-                                            : 1 /
-                                                _controller!.value.aspectRatio),
-                                    child: CameraPreview(
-                                        _controller!), // this is my CameraPreview
+                        if (_capturedImage == null)
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              double pageWidth = constraints.maxWidth;
+                              double pageHeight = constraints.maxHeight;
+                              double cropSize = min(pageWidth, pageHeight);
+                              return Stack(
+                                children: [
+                                  Center(
+                                    child: SizedBox(
+                                      width: cropSize,
+                                      height: cropSize,
+                                      child: ClipRect(
+                                        child: OverflowBox(
+                                          alignment: Alignment.center,
+                                          child: FittedBox(
+                                            fit: BoxFit.fitWidth,
+                                            child: Container(
+                                              width: cropSize,
+                                              height: cropSize *
+                                                  (cropSize == pageWidth
+                                                      ? _controller!.value.aspectRatio
+                                                      : 1 /
+                                                          _controller!.value.aspectRatio),
+                                              child: CameraPreview(
+                                                  _controller!), // this is my CameraPreview
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                   ),
+                                  Center(
+                                    child: Icon(Icons.square_outlined, color: Colors.white, size: cropSize * .8)
+                                  ),
+                                  Container(
+                                    padding: EdgeInsets.all(8.0),
+                                    alignment: Alignment.topCenter,
+                                    child: Text("Analyze Food Picture", style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600), textAlign: TextAlign.center, overflow: TextOverflow.clip),
+                                  ),
+                                  Align(
+                                    alignment: Alignment.bottomCenter,
+                                    child: GestureDetector(
+                                      onTap: _onCapturePressed,
+                                      child: Container(
+                                        height: 100,
+                                        width: 200,
+                                        decoration: BoxDecoration(
+                                            color: const Color.fromARGB(255, 47, 87, 79),
+                                            border: Border.all(color: const Color.fromARGB(156, 255, 255, 255), width: 2),
+                                            borderRadius:
+                                            BorderRadius.all(Radius.circular(20)),
+                                            
+                                        ),
+                                        margin: EdgeInsets.only(bottom: 40),
+                                        child: Center(
+                                          child: Icon(Icons.camera_alt, color: Colors.white, size: 50,),
+                                          
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                      top: 5,
+                                      left: 5,
+                                      child: GestureDetector(
+                                          onTap: () => setState(() => elementState = 0),
+                                          child: Container(
+                                              height: 50,
+                                              width: 50,
+                                              decoration: BoxDecoration(
+                                                  color: Color.fromARGB(155, 0, 0, 0),
+                                                  borderRadius:
+                                                      BorderRadius.circular(20)),
+                                              child: Icon(Icons.arrow_back_ios,
+                                                  color: Colors.white)))),
+                          
+                                ],
+                              );
+                            },
+                          )
+                        else
+                          Column(
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(8.0),
+                                alignment: Alignment.topCenter,
+                                  child: Text("Captured Food Image", style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600), textAlign: TextAlign.center, overflow: TextOverflow.clip),
+                              ),
+                              Expanded(
+                                // Show the captured image
+                                child: Image.file(File(_capturedImage!.path)),
+                              ),
+                              // Show the confirmation buttons
+                              Container(
+                                color: const Color.fromARGB(255, 0, 17, 35),
+                                padding: const EdgeInsets.symmetric(vertical: 50),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    // Retake Button
+                                    ElevatedButton(
+                                      onPressed: _onRetakePressed,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color.fromARGB(255, 132, 79, 97),
+                                        foregroundColor: Colors.white,
+                                        minimumSize: Size(150, 75)
+                                      ),
+                                      child: const Text('Retake'),
+                                    ),
+                                    // Use Photo Button
+                                    ElevatedButton(
+                                      onPressed: _onUsePhotoPressed,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color.fromARGB(255, 47, 87, 79),
+                                        foregroundColor: Colors.white,
+                                        minimumSize: Size(150, 75)
+                                      ),
+                                      child: const Text('Use Photo'),
+                                    ),
+                                  ],
                                 ),
                               ),
+                            ],
+                          ),
+                        if (_isCapturing)
+                          Container(
+                            color: const Color.fromARGB(127, 0, 0, 0),
+                            child: const Center(
+                              child: CircularProgressIndicator(color: Colors.white),
                             ),
                           ),
-                        ),
-                        Center(
-                          child: Icon(Icons.square_outlined, color: Colors.white, size: cropSize * .8)
-                        ),
-                        Container(
-                          padding: EdgeInsets.all(8.0),
-                          alignment: Alignment.topCenter,
-                          child: Text("Analyze Food Picture", style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600), textAlign: TextAlign.center, overflow: TextOverflow.clip),
-                        ),
-                  
-                        Positioned(
-                            top: 5,
-                            left: 5,
-                            child: GestureDetector(
-                                onTap: () => setState(() => elementState = 0),
-                                child: Container(
-                                    height: 50,
-                                    width: 50,
-                                    decoration: BoxDecoration(
-                                        color: Color.fromARGB(155, 0, 0, 0),
-                                        borderRadius:
-                                            BorderRadius.circular(20)),
-                                    child: Icon(Icons.arrow_back_ios,
-                                        color: Colors.white)))),
                       ],
                     );
-                  },
-                ),
+                  }
+                  // Show a loading indicator while waiting for the camera to initialize
+                  return Center(child: CircularProgressIndicator());
+                }
+              ),
         ),
       );
     }
