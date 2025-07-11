@@ -783,7 +783,7 @@ class _OptionsSelectMenuState extends State<OptionsSelectMenu>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
-          color: optionButton == targetNum ? const Color.fromARGB(77, 255, 255, 255) : Colors.transparent,
+          color: optionButton == targetNum ? text == "None" ?  const Color.fromARGB(35, 255, 255, 255) : const Color.fromARGB(77, 255, 255, 255) : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(

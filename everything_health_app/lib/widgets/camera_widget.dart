@@ -2,13 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import '../main.dart';
 
 // You might want to make this function private if it's only used internally by this widget
 // or keep it public if other parts of your app might need to query cameras directly.
-Future<List<CameraDescription>> _getAvailableCameras() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Ensure bindings are initialized for camera plugin
-  return await availableCameras();
-}
 
 class CameraApp extends StatefulWidget {
   const CameraApp({super.key});
@@ -19,7 +16,6 @@ class CameraApp extends StatefulWidget {
 
 class _CameraAppState extends State<CameraApp> {
   CameraController? _controller; // Make nullable to handle initial uninitialized state
-  List<CameraDescription>? _cameras; // Make nullable
   Future<void>? _initializeControllerFuture; // Make nullable
 
   @override
@@ -30,9 +26,7 @@ class _CameraAppState extends State<CameraApp> {
 
   Future<void> _initializeCamera() async {
     try {
-      _cameras = await _getAvailableCameras(); // Fetch cameras
-
-      if (_cameras == null || _cameras!.isEmpty) {
+      if (cameras.isEmpty) {
         // Handle case where no cameras are found
         print('No cameras found on this device.');
         setState(() {
@@ -40,10 +34,14 @@ class _CameraAppState extends State<CameraApp> {
         });
         return;
       }
-
+      final obsCamera = cameras.firstWhere(
+        (camera) => camera.name.contains('OBS'),
+        // If not found, fall back to the first available camera
+        orElse: () => cameras.first,
+      );
       // Initialize the controller with the first available camera
       _controller = CameraController(
-        _cameras![0], // Use the first available camera
+        obsCamera, // Use the first available camera
         ResolutionPreset.medium,
         enableAudio: true, // Typically needed for video recording, good practice
       );

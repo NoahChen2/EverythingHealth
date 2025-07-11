@@ -9,7 +9,9 @@ import 'models/history_foods.dart';
 import 'models/saved_foods.dart';
 
 import 'package:isar/isar.dart';
+import 'package:camera/camera.dart';
 
+List<CameraDescription> cameras = [];
 late Isar isar; // A global Isar instance
 
 
@@ -36,7 +38,8 @@ Future<void> main() async {
     [SavedFoodSchema, HistoryFoodSchema], // Pass your collection schema here
     directory: dir.path,
   );
-
+  
+  cameras = await availableCameras();
   runApp(const MyApp());
 }
 
