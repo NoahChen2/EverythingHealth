@@ -7,6 +7,7 @@ import 'package:everything_health_app/screens/log_food_page.dart';
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'dart:async';
 
 import 'package:isar/isar.dart';
@@ -91,6 +92,7 @@ void _toggleViewNutritionInfo() {
 }
 
 Future<void> _handleApplyNew() async {
+  _currFoodVals![10] = _currFoodVals![10].replaceAll('​', '');
   setState((){
     _autoSaveApply = true;
     _isSaved = false;
@@ -100,6 +102,7 @@ Future<void> _handleApplyNew() async {
 }
 
 Future<void> _handleApplySave () async {
+    _currFoodVals![10] = _currFoodVals![10].replaceAll('​', '');
     FoodItem tempFood = FoodItem(
       name: _currFoodVals![10],
       serving_size: _currFoodVals![1],
@@ -183,6 +186,7 @@ void _scaleUpFoods(num scale) {
 }
 
 Future<void> _addFood() async {
+  _currFoodVals![10] = _currFoodVals![10].replaceAll('​', '');
   FoodItem tempFood = FoodItem(
     name: _currFoodVals![10],
     serving_size: _currFoodVals![1],
@@ -196,7 +200,7 @@ Future<void> _addFood() async {
     normalized_name: _normalizeText(_currFoodVals![10]),
     densityRequired: _currFoodVals![11],
     time:
-        DateTime.now().toUtc().difference(DateTime.utc(1970, 1, 1)).inSeconds,
+        _currFoodVals![15],
     servings: _currFoodVals![12],
     code: _currFoodVals![13],
     meal: _currFoodVals![14],
@@ -225,6 +229,7 @@ Future<void> _saveFood() async {
   }
   else{
     setState(() => _isSaved = true);
+    _currFoodVals![10] = _currFoodVals![10].replaceAll('​', '');
     FoodItem tempFood = FoodItem(
       name: _currFoodVals![10],
       serving_size: _currFoodVals![1],
@@ -280,7 +285,7 @@ void _handleCodeChange(String str) {
 }
 
 void _highlightIfDefault() {
-  if (_titleFocusNode.hasFocus && _nameTextController.text.startsWith(RegExp(r'New Food \d{4}\/\d{2}\/\d{2} \d{2}:\d{2}'))
+  if (_titleFocusNode.hasFocus && _nameTextController.text.startsWith(RegExp(r'​New Food \d{4}\/\d{2}\/\d{2} \d{2}:\d{2}'))
   && _autoHighlight
   ) {
     // Use addPostFrameCallback to make sure the selection happens after the frame is built.
@@ -345,6 +350,7 @@ Widget build(BuildContext context) {
       currFood.servings,
       currFood.code,
       currFood.meal,
+      DateTime.now().toUtc().difference(DateTime.utc(1970, 1, 1)).inSeconds,
     ];
     if (!(_currFoodVals![1] == "DEFAULT_SERVING_SIZE" &&
           _currFoodVals![2] == -1))
@@ -667,6 +673,16 @@ Widget build(BuildContext context) {
                             currFoodVals: _currFoodVals!,
                             scaleFunc: _scaleUpFoods),
                         ModifiableFoodItemData(
+                            lbl: "Time",
+                            qty: null,
+                            amt: 0,
+                            uts: "",
+                            editValue: _editSelection,
+                            editAll: () => _toggleEditAll(),
+                            currFood: currFood,
+                            currFoodVals: _currFoodVals!,
+                            scaleFunc: _scaleUpFoods),
+                        ModifiableFoodItemData(
                             lbl: "Serving Size",
                             qty: _currFoodVals![1],
                             amt: null,
@@ -932,6 +948,7 @@ static const List<String> _attributes = [
   "Servings",
   "",
   "Meal",
+  "Time",
 ];
 static const List<String> _attributesName = [
   "",
@@ -949,6 +966,7 @@ static const List<String> _attributesName = [
   "servings",
   "",
   "meal",
+  "time",
 ];
 static const weightUnitsPerGram = {
   'g': 1.0,
@@ -1327,7 +1345,7 @@ Widget build(BuildContext context) {
   if (currZeroScale != null && currZeroScale! <= .00001) {
     if (attributeID == "serving_size") {
       currZeroScale = seperateAmtAndUnits(widget.currFood[attributeID!])[0];
-    } else if (attributeID != "meal"){
+    } else if (attributeID != "meal" && attributeID != "time"){
       currZeroScale = widget.currFood[attributeID!];
     }
   }
@@ -1367,8 +1385,7 @@ Widget build(BuildContext context) {
           overflow: TextOverflow.ellipsis,
           style: TextStyle(fontSize: 12, color: Colors.white)),
     ),
-    Expanded(
-      child: attributeID! != "meal" ? 
+      attributeID! != "meal"  && attributeID != "time"? 
       GestureDetector(
         onDoubleTap: () {widget.editAll();setState((){_textFocusNode.requestFocus();editingField = true;});},
         child: Text(
@@ -1377,7 +1394,7 @@ Widget build(BuildContext context) {
             textAlign: TextAlign.end,
             style: TextStyle(fontSize: 12, color: Colors.white)),
         ) 
-        :
+        : attributeID! == "meal" ?
           Container(
             alignment: Alignment.centerRight,
             child: DropdownButton<String>(
@@ -1402,8 +1419,94 @@ Widget build(BuildContext context) {
                   )
                   .toList(),
             ),
+          )
+          :  Row(
+            children: [
+              // Date Selector Button
+              GestureDetector(
+                onTap: () async {
+                  DateTime selectedDateTime = DateTime.fromMillisecondsSinceEpoch(_currFoodVals[15] * 1000);
+                  final DateTime? pickedDate = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.fromMillisecondsSinceEpoch(_currFoodVals[15] * 1000),
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime(2999),
+                  );
+                  if (pickedDate != null) {
+                    setState(() {
+                      // Combine the new date with the existing time
+                      selectedDateTime = DateTime(
+                        pickedDate.year,
+                        pickedDate.month,
+                        pickedDate.day,
+                        selectedDateTime.hour,
+                        selectedDateTime.minute,
+                      );
+                        
+                        // 1. Convert the local DateTime to UTC
+                        final utcTime = selectedDateTime.toUtc();
+                        // 2. Get milliseconds since epoch and convert to seconds
+                        _currFoodVals[15] = utcTime.millisecondsSinceEpoch ~/ 1000;
+                      });
+                  }
+                },
+                
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    border: Border.all(color: Colors.white),
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                  ),
+                  padding: EdgeInsets.all(8),
+                  child:
+                    Row(
+                      spacing: 5,
+                      children: [const Icon(Icons.calendar_today, size: 16, color: Colors.white), Text(DateFormat.yMMMd().format(DateTime.fromMillisecondsSinceEpoch(_currFoodVals[15] * 1000)), style: TextStyle(fontSize: 12, color: Colors.white))],
+                ),
+                ),),
+                const SizedBox(width: 8), // Spacing between buttons
+                // Time Selector Button
+                GestureDetector(
+                  onTap: () async {
+                      DateTime selectedDateTime = DateTime.fromMillisecondsSinceEpoch(_currFoodVals[15] * 1000);
+                      final TimeOfDay? pickedTime = await showTimePicker(
+                        context: context,
+                        initialTime: TimeOfDay.fromDateTime(selectedDateTime),
+                      );
+                
+                      if (pickedTime != null) {
+                        setState(() {
+                          // Combine the existing date with the new time
+                          selectedDateTime = DateTime(
+                            selectedDateTime.year,
+                            selectedDateTime.month,
+                            selectedDateTime.day,
+                            pickedTime.hour,
+                            pickedTime.minute,
+                          );
+                          // 1. Convert the local DateTime to UTC
+                          final utcTime = selectedDateTime.toUtc();
+                          // 2. Get milliseconds since epoch and convert to seconds
+                          _currFoodVals[15] = utcTime.millisecondsSinceEpoch ~/ 1000;
+                        });
+                      }
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.transparent,
+                      border: Border.all(color: Colors.white),
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                  ),
+                  padding: EdgeInsets.all(8),
+                    child: Row(
+                      spacing: 5,
+                      children: 
+                      [Icon(Icons.access_time, size: 16, color: Colors.white),Text(DateFormat.jm().format(DateTime.fromMillisecondsSinceEpoch(_currFoodVals[15] * 1000)), style: TextStyle(fontSize: 12, color: Colors.white)),]
+                      ),
+                  ),
+                ),
+              ],
           ),
-    ),
   ]);
 
   Widget attributeDisplayEdit = Column(
@@ -1412,6 +1515,11 @@ Widget build(BuildContext context) {
           : 
           SizedBox.shrink(),
       Row(children: [
+        Icon(attributeID != "meal"  && attributeID != "time" && editingField? Icons.arrow_drop_down : Icons.arrow_right,
+          color: attributeID != "meal"  && attributeID != "time" ? Colors.white : Colors.transparent,
+          size: 24,
+        ),
+        SizedBox(width: 10),
         Expanded(
           child: Text(
             "$label:",
@@ -1420,7 +1528,7 @@ Widget build(BuildContext context) {
             textAlign: TextAlign.start,
           ),
         ),
-        attributeID != "meal" ? SizedBox(
+        attributeID != "meal" && attributeID != "time" ? SizedBox(
           width: 50,
           child: TextField(
             cursorColor: Colors.white,
@@ -1437,9 +1545,9 @@ Widget build(BuildContext context) {
               FilteringTextInputFormatter.allow(RegExp(r'[\d.,]*'))
             ],
           ),
-        ) :
+        ) : attributeID! == "meal" ?
           DropdownButton<String>(
-            icon: Icon(Icons.arrow_drop_down, color: Colors.white),
+            icon: Icon(Icons.arrow_drop_down, color: Colors.white, size: 24),
             isDense: true,
             dropdownColor: Color.fromARGB(255, 38, 131, 112),
             value: _currFoodVals[14] != "" ? _currFoodVals[14] : "No Meal",
@@ -1458,11 +1566,100 @@ Widget build(BuildContext context) {
                   child: Text(str, style: TextStyle(color: str == "No Meal" ? Color.fromARGB(175, 255, 255, 255) : Colors.white)),
                 ))
                 .toList(),
+          )
+          : // This Row can be placed in the `else` part of your ternary operator
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Date Selector Button
+              GestureDetector(
+                onTap: () async {
+                  DateTime selectedDateTime = DateTime.fromMillisecondsSinceEpoch(_currFoodVals[15] * 1000);
+                  final DateTime? pickedDate = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.fromMillisecondsSinceEpoch(_currFoodVals[15] * 1000),
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime(2999),
+                  );
+                  if (pickedDate != null) {
+                    setState(() {
+                      // Combine the new date with the existing time
+                      selectedDateTime = DateTime(
+                        pickedDate.year,
+                        pickedDate.month,
+                        pickedDate.day,
+                        selectedDateTime.hour,
+                        selectedDateTime.minute,
+                      );
+                        
+                        // 1. Convert the local DateTime to UTC
+                        final utcTime = selectedDateTime.toUtc();
+                        // 2. Get milliseconds since epoch and convert to seconds
+                        _currFoodVals[15] = utcTime.millisecondsSinceEpoch ~/ 1000;
+                      });
+                  }
+                },
+                
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    border: Border.all(color: Colors.white),
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                  ),
+                  padding: EdgeInsets.all(8),
+                  child:
+                    Row(
+                      spacing: 5,
+                      children: [const Icon(Icons.calendar_today, size: 16, color: Colors.white), Text(DateFormat.yMMMd().format(DateTime.fromMillisecondsSinceEpoch(_currFoodVals[15] * 1000)), style: TextStyle(fontSize: 12, color: Colors.white))],
+                ),
+                ),),
+                const SizedBox(width: 8), // Spacing between buttons
+                // Time Selector Button
+                GestureDetector(
+                  onTap: () async {
+                      DateTime selectedDateTime = DateTime.fromMillisecondsSinceEpoch(_currFoodVals[15] * 1000);
+                      final TimeOfDay? pickedTime = await showTimePicker(
+                        context: context,
+                        initialTime: TimeOfDay.fromDateTime(selectedDateTime),
+                      );
+                
+                      if (pickedTime != null) {
+                        setState(() {
+                          // Combine the existing date with the new time
+                          selectedDateTime = DateTime(
+                            selectedDateTime.year,
+                            selectedDateTime.month,
+                            selectedDateTime.day,
+                            pickedTime.hour,
+                            pickedTime.minute,
+                          );
+                          // 1. Convert the local DateTime to UTC
+                          final utcTime = selectedDateTime.toUtc();
+                          // 2. Get milliseconds since epoch and convert to seconds
+                          _currFoodVals[15] = utcTime.millisecondsSinceEpoch ~/ 1000;
+                        });
+                      }
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.transparent,
+                      border: Border.all(color: Colors.white),
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                  ),
+                  padding: EdgeInsets.all(8),
+                    child: Row(
+                      spacing: 5,
+                      children: 
+                      [Icon(Icons.access_time, size: 16, color: Colors.white),Text(DateFormat.jm().format(DateTime.fromMillisecondsSinceEpoch(_currFoodVals[15] * 1000)), style: TextStyle(fontSize: 12, color: Colors.white)),]
+                      ),
+                  ),
+                ),
+              ],
           ),
         Container(
           child: "calories" == attributeID
               ? DropdownButton<String>(
-                  icon: Icon(Icons.arrow_drop_down, color: Colors.white),
+                  icon: Icon(Icons.arrow_drop_down, color: Colors.white, size: editingField? 24: 0),
                   isDense: true,
                   dropdownColor: Color.fromARGB(255, 38, 131, 112),
                   underline: SizedBox.shrink(),
@@ -1488,7 +1685,7 @@ Widget build(BuildContext context) {
                 )
               : normalizedUnit != "" && "serving_size" == attributeID
                   ? DropdownButton<String>(
-                      icon: Icon(Icons.arrow_drop_down, color: Colors.white),
+                      icon: Icon(Icons.arrow_drop_down, color: Colors.white, size: editingField? 24: 0),
                       isDense: true,
                       dropdownColor: Color.fromARGB(255, 38, 131, 112),
                       underline: SizedBox.shrink(),
@@ -1511,50 +1708,53 @@ Widget build(BuildContext context) {
                           fontSize: 12, overflow: TextOverflow.clip, color: Colors.white)),
                           
         ),
-        SizedBox(width: 5),
+        SizedBox(width: 20),
         GestureDetector(
-          onTap: attributeID != "meal" ? _resetToDefaultValue : () => {setState(() {_currFoodVals[14] = widget.currFood.meal;})},
-          child: Icon(Icons.undo, color: const Color.fromARGB(255, 255, 255, 255)),
+          onTap: attributeID != "meal" && attributeID != "time" ? _resetToDefaultValue : () => attributeID == "meal" ? {setState(() {_currFoodVals[14] = widget.currFood.meal;})} : {setState(() {_currFoodVals[15] = DateTime.now().toUtc().difference(DateTime.utc(1970, 1, 1)).inSeconds;})},
+          child: Icon(Icons.undo, color: attributeID == "meal" || attributeID == "time" || editingField ? Colors.white : Colors.transparent, size: 24),
         ),
       ]),
-      attributeID == "density" ? 
-      Row(
-        children: [
-          Expanded(child:SizedBox.shrink()),
-          Text("Preset: ", style: TextStyle(fontSize: 12, color: const Color.fromARGB(175, 255, 255, 255))),
-          SizedBox(width: 10),
-          DropdownButton<String>(
-                  icon: Icon(Icons.arrow_drop_down, color: const Color.fromARGB(255, 255, 255, 255)),
-                  isDense: true,
-                  dropdownColor: Color.fromARGB(255, 29, 96, 94),
-                  value: densityPresets.keys.firstWhere((element) => densityPresets[element] == _currFoodVals[8], orElse: () => "Choose Preset"),
-                  style: TextStyle(
-                      fontSize: 12,
-                      overflow: TextOverflow.clip,
-                    ),
-                  onChanged: (str) {setState((){
-                      if (str != "Choose Preset"){
-                        _scaleUpFoods!(densityPresets[str]! / amount!);
-                        _currFoodVals[8] = densityPresets[str]; 
-                        amount = _currFoodVals[8];
-                        _textController.text = _currFoodVals[8].toStringAsFixed(2);
-                      }
-                      else {
-                        _currFoodVals[8] = _currFoodVals[8] + .00000000000017; 
-                        amount = _currFoodVals[8];
-                      }
-                    });},
-                  items: (["Choose Preset"] + densityPresets.keys.toList())
-                      .map((str) => DropdownMenuItem<String>(
-                            value: str,
-                            child: Text(str, textAlign: TextAlign.end, style: TextStyle(color: str == "Choose Preset" ? Color.fromARGB(175, 255, 255, 255) : Colors.white)),
-                          ))
-                      .toList(),
-                )
-        ],
+      attributeID == "density" && editingField ? 
+      Padding(
+        padding: const EdgeInsets.only(top: 4.0),
+        child: Row(
+          children: [
+            Expanded(child:SizedBox.shrink()),
+            Text("Preset: ", style: TextStyle(fontSize: 12, color: const Color.fromARGB(175, 255, 255, 255))),
+            SizedBox(width: 10),
+            DropdownButton<String>(
+                    icon: Icon(Icons.arrow_drop_down, color: const Color.fromARGB(255, 255, 255, 255)),
+                    isDense: true,
+                    dropdownColor: Color.fromARGB(255, 29, 96, 94),
+                    value: densityPresets.keys.firstWhere((element) => densityPresets[element] == _currFoodVals[8], orElse: () => "Choose Preset"),
+                    style: TextStyle(
+                        fontSize: 12,
+                        overflow: TextOverflow.clip,
+                      ),
+                    onChanged: (str) {setState((){
+                        if (str != "Choose Preset"){
+                          _scaleUpFoods!(densityPresets[str]! / amount!);
+                          _currFoodVals[8] = densityPresets[str]; 
+                          amount = _currFoodVals[8];
+                          _textController.text = _currFoodVals[8].toStringAsFixed(2);
+                        }
+                        else {
+                          _currFoodVals[8] = _currFoodVals[8] + .00000000000017; 
+                          amount = _currFoodVals[8];
+                        }
+                      });},
+                    items: (["Choose Preset"] + densityPresets.keys.toList())
+                        .map((str) => DropdownMenuItem<String>(
+                              value: str,
+                              child: Text(str, textAlign: TextAlign.end, style: TextStyle(color: str == "Choose Preset" ? Color.fromARGB(175, 255, 255, 255) : Colors.white)),
+                            ))
+                        .toList(),
+                  )
+          ],
+        ),
       )
       : SizedBox.shrink(),
-      attributeID != "meal" && editingField? SliderTheme(
+      attributeID != "meal"  && attributeID != "time" && editingField? SliderTheme(
         data: SliderTheme.of(context).copyWith(
           // Optional: Customize slider appearance
           activeTrackColor: Colors.blueAccent.shade100,
