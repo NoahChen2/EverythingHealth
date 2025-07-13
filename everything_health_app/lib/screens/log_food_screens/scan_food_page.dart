@@ -19,6 +19,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:isar/isar.dart';
 import 'package:everything_health_app/models/saved_foods.dart';
 import 'package:everything_health_app/models/history_foods.dart';
+import '../../services/nutrition_services.dart';
 
 class ScanFoodPage extends StatefulWidget {
   final Function addFoodFunc;
@@ -35,21 +36,37 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
   CameraController?
       _controller; // Make nullable to handle initial uninitialized state
   Future<void>? _initializeControllerFuture; // Make nullable
-  String _loadError = '';
-  bool _isLoading = false;
+  String _loadError = 'Load Error';
+  bool _isLoading = true;
   String foundFoodStatus = "none";
   FoodItem? food;
   int elementState = 0;
   XFile? _capturedImage;
   bool _isCapturing = false;
+  final NutritionService _nutritionService = NutritionService();
 
   @override
   void initState() {
     super.initState();
-    _initializeCamera();
+    // Call a new function to handle all initializations
+    _initializeServices();
     elementState = 0;
   }
 
+  Future<void> _initializeServices() async {
+    // Load the model and initialize the camera concurrently
+    await Future.wait([
+      _nutritionService.loadModel(),
+      _initializeCamera(),
+    ]);
+
+    // Once everything is loaded, update the state to unlock the UI
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
   Future<void> barcodeDetected(capture) async {
     if (!_isProcessingScan && capture.barcodes.isNotEmpty) {
       setState(() {
@@ -377,26 +394,84 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
       setState(() { _isCapturing = false; });
     }
   }
+  
+  String _normalizeText(String text) {
+    String normalized = text.toLowerCase();
+    // Remove common punctuation. This regex removes most symbols except letters, numbers, and whitespace.
+    // You can customize it to be more or less aggressive.
+    normalized = normalized.replaceAll(RegExp(r'[^\w\s]+'), ''); 
+    // Replace multiple whitespace characters with a single space and trim.
+    normalized = normalized.replaceAll(RegExp(r'\s+'), ' ').trim();
+    return normalized;
+  }
 
   // This function handles the "Use Photo" button press
   Future<void> _onUsePhotoPressed() async {
     
     if (_capturedImage == null) return;
-    
-    setState(() { _isCapturing = true; });
-
+    setState(() {
+        _isCapturing = true;
+        _isProcessingScan = true; // Prevents multiple rapid scans
+        _isLoading = true;
+        elementState = 0;
+        foundFoodStatus = "Analyzing Image...";
+    });
     try {
       // This is your previous processing logic
-      final String resizedPath = await _resizePhoto(_capturedImage!.path);
+      final String resizedPath = await _resizePhoto(_capturedImage!.path, setTo260: true);
       final Uint8List imageBytes = await File(resizedPath).readAsBytes();
+      final String displayImagePath = await _resizePhoto(_capturedImage!.path, setTo260: false);
 
       print('SUCCESS: Resized image is now in RAM.');
       print('Image size: ${imageBytes.lengthInBytes / 1024} KB');
       
-      // TODO: Send 'imageBytes' to your food analysis API.
-
+      print('Waiting...');
+      final results = await _nutritionService.analyzeImage(imageBytes);
+      final MEAN_MAP = _nutritionService.getMeans();
+      final STD_MAP = _nutritionService.getStdDevs();
+      final Map<String,double> convertedResults = {
+        "grams": (results["grams"]!.toDouble() * STD_MAP['grams']!.toDouble() + MEAN_MAP['grams']!.toDouble()),
+        "calories": (results["calories_100g"]!.toDouble() * STD_MAP['calories_100g']!.toDouble() + MEAN_MAP['calories_100g']!.toDouble()) * (results["grams"]!.toDouble() * STD_MAP['grams']!.toDouble() + MEAN_MAP['grams']!.toDouble())/100,
+        "carbs": (results["carbs_100g"]!.toDouble() * STD_MAP['carbs_100g']!.toDouble() + MEAN_MAP['carbs_100g']!.toDouble()) * (results["grams"]!.toDouble() * STD_MAP['grams']!.toDouble() + MEAN_MAP['grams']!.toDouble())/100,
+        "fats": (results["fat_100g"]!.toDouble() * STD_MAP['fat_100g']!.toDouble() + MEAN_MAP['fat_100g']!.toDouble()) * (results["grams"]!.toDouble() * STD_MAP['grams']!.toDouble() + MEAN_MAP['grams']!.toDouble())/100,
+        "protein": (results["protein_100g"]!.toDouble() * STD_MAP['protein_100g']!.toDouble() + MEAN_MAP['protein_100g']!.toDouble()) * (results["grams"]!.toDouble() * STD_MAP['grams']!.toDouble() + MEAN_MAP['grams']!.toDouble())/100,
+        "sugar": (results["sugar_100g"]!.toDouble() * STD_MAP['sugar_100g']!.toDouble() + MEAN_MAP['sugar_100g']!.toDouble()) * (results["grams"]!.toDouble() * STD_MAP['grams']!.toDouble() + MEAN_MAP['grams']!.toDouble())/100,
+      };
+      FoodItem scannedFood = FoodItem(
+              name: "​New Food ${DateFormat('yyyy/MM/dd HH:mm').format(DateTime.now())}",
+              serving_size: "${convertedResults['grams']!.toInt()} g",
+              grams: convertedResults["grams"]!.toDouble(),
+              calories: convertedResults["calories"]!.toDouble(),
+              carbs: convertedResults["carbs"]!.toDouble(),
+              fats: convertedResults["fats"]!.toDouble(),
+              protein: convertedResults["protein"]!.toDouble(),
+              sugar: convertedResults["sugar"]!.toDouble(),
+              density: 1,
+              densityRequired: false,
+              normalized_name: _normalizeText("​New Food ${DateFormat('yyyy/MM/dd HH:mm').format(DateTime.now())}"),
+              servings: 1,
+              code: -1,
+              img_url: displayImagePath,
+              image_small_url: displayImagePath,
+            );
+      for (String atr in ["calories", "carbs", "fats", "protein", "sugar"])
+      {
+        if (scannedFood[atr] < 0)
+        {
+          scannedFood[atr] = 0;
+        }
+      }
       // After processing, return to the main menu
       setState(() {
+        if (scannedFood.grams >= 0)
+        {
+          foundFoodStatus = "Food Scanned Successfully";
+          food = scannedFood;
+        }
+        else {
+          foundFoodStatus = "Unable to Scan Food";
+        }
+        _isLoading = false;
         elementState = 0;
         _capturedImage = null; // Clear the image
       });
@@ -415,7 +490,8 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
       _capturedImage = null; // Clear the image to go back to the camera preview
     });
   }
-  Future<String> _resizePhoto(String filePath) async {
+  Future<String> _resizePhoto(String filePath,{bool setTo260 = false}) async {
+    //If setTo260 is true, resize to 260x260, else crop to square
     // Read the original image file into memory
     final originalFile = File(filePath);
     final imageBytes = await originalFile.readAsBytes();
@@ -445,10 +521,20 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
     // Get a temporary directory to save the new file
     final tempDir = await getTemporaryDirectory();
     final newPath = '${tempDir.path}/resized_${DateTime.now().millisecondsSinceEpoch}.jpg';
-
+    
+    img.Image finalImage;
+    if (setTo260) {
+      finalImage = img.copyResize(
+        croppedImage,
+        width: 260,
+        height: 260,
+      );
+    } else {
+      finalImage = croppedImage;
+    }
     // Save the cropped image to the new path
     final newFile = File(newPath);
-    await newFile.writeAsBytes(img.encodeJpg(croppedImage));
+    await newFile.writeAsBytes(img.encodeJpg(finalImage));
 
     // Return the path of the new, resized image file
     return newFile.path;
@@ -533,13 +619,14 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                   ]),
                 ],
               )),
-            foundFoodStatus != "none" ? 
+            foundFoodStatus != "none"? 
                   Stack(
                     children:[
                       GestureDetector(
                         onTap: () {
                           setState(() {
                             foundFoodStatus = "none";
+                            food = null;
                           });
                         },
                         child: Container(
@@ -556,10 +643,11 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                 children: [
-                                  _isLoading ? 
+                                  _isLoading && foundFoodStatus != "Analyzing Image..."? 
                                   Text(_loadError, style: const TextStyle(color: Colors.redAccent, fontSize: 16), textAlign: TextAlign.center,): 
                                   Text(foundFoodStatus, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600), textAlign: TextAlign.center, overflow: TextOverflow.clip,),
-                                  !food!.name.startsWith("​New Food") ? 
+                                  food != null ? 
+                                  (!food!.name.startsWith("​New Food") || ["Food Scanned Successfully", "Unable to Scan Food"].contains(foundFoodStatus)) && foundFoodStatus != "Analyzing Image..."? 
                                     Container(
                                       width: 300,
                                       height: 300,
@@ -583,38 +671,20 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                                                 flex: 10, // Give this section 60% of the height
                                                 child: Container(
                                                   width: double.infinity,
-                                                  height: 40,
+                                                  height: 120,
                                                   color: food!.color,
                                                   child: Row(
                                                     children: [
                                                       // Position the stats at the top right
                                                       Expanded(
                                                         flex: 6,
-                                                        child: Image.network(food!.img_url, fit: BoxFit.contain,
-                                                            loadingBuilder: (BuildContext context, Widget child,
-                                                                ImageChunkEvent? loadingProgress) {
-                                                          if (loadingProgress == null) {
-                                                            return child; // Image is fully loaded
-                                                          }
-                                                          return Center(
-                                                            child: CircularProgressIndicator(
-                                                              // Optionally use loadingProgress to show download percentage
-                                                              value: loadingProgress.expectedTotalBytes != null
-                                                                  ? loadingProgress.cumulativeBytesLoaded /
-                                                                      loadingProgress.expectedTotalBytes!
-                                                                  : null,
-                                                            ),
-                                                          );
-                                                        }, errorBuilder: (BuildContext context, Object exception,
-                                                                StackTrace? stackTrace) {
-                                                          // You can return any widget here, e.g., an icon or placeholder text
-                                                          return Container();
-                                                        }),
+                                                        child: UniversalImage(path: food!.img_url, fit: BoxFit.contain),
                                                       ),
                                                       Expanded(
                                                         flex: 4,
                                                         child: Container(
-                                                          height: 40,
+                                                          height: 120,
+                                                          width: 120,
                                                           padding: EdgeInsets.only(right: 5, top: 5, bottom: 5),
                                                           child: Column(
                                                             crossAxisAlignment: CrossAxisAlignment.end,
@@ -626,11 +696,12 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                                                                   food!.serving_size,
                                                                   maxLines: 1,
                                                                   minFontSize: 1,
-                                                                  maxFontSize: 20,
+                                                                  maxFontSize: 50,
                                                                   textAlign: TextAlign.right,
                                                                   style: const TextStyle(
+                                                                    fontWeight: FontWeight.w600,
                                                                     color: Colors.white,
-                                                                    fontSize: 10, // The starting font size
+                                                                    fontSize: 24, // The starting font size
                                                                     shadows: [
                                                                       Shadow(color: Colors.black, blurRadius: 2.0)
                                                                     ],
@@ -643,11 +714,12 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                                                                   "${food!.calories.toStringAsFixed(0)} kcal",
                                                                   maxLines: 1,
                                                                   minFontSize: 1,
-                                                                  maxFontSize: 20,
+                                                                  maxFontSize: 50,
                                                                   textAlign: TextAlign.right,
                                                                   style: const TextStyle(
+                                                                    fontWeight: FontWeight.w600,
                                                                     color: Colors.white,
-                                                                    fontSize: 10,
+                                                                    fontSize: 24,
                                                                     shadows: [
                                                                       Shadow(color: Colors.black, blurRadius: 2.0)
                                                                     ],
@@ -681,7 +753,7 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                                                         maxFontSize: 40,
                                                         maxLines: 2,
                                                         textAlign: TextAlign.center,
-                                                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                                                        style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600,),
                                                       ),
                                                     ),
                                                   ),
@@ -715,8 +787,9 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                                                 Icon(Icons.add, color: Colors.white),
                                               ])
                                         ),
-                                      ),
-                                    !["Food found in Saved Foods", "Food found in History Foods"].contains(foundFoodStatus) ? SizedBox.shrink() : 
+                                      )
+                                    : SizedBox.shrink(),
+                                    !["Food found in Saved Foods", "Food found in History Foods"].contains(foundFoodStatus) || food!.code == -1 ? SizedBox.shrink() : 
                                       GestureDetector(
                                           onTap: () => print("Searching api (add later)"),
                                           child: Center(

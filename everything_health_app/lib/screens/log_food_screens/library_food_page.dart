@@ -438,26 +438,7 @@ Widget foodItemCard(FoodItem food, Function saveFoodFunc, Function addFoodFunc,
                     // Position the stats at the top right
                     Expanded(
                       flex: 6,
-                      child: Image.network(food.img_url, fit: BoxFit.contain,
-                          loadingBuilder: (BuildContext context, Widget child,
-                              ImageChunkEvent? loadingProgress) {
-                        if (loadingProgress == null) {
-                          return child; // Image is fully loaded
-                        }
-                        return Center(
-                          child: CircularProgressIndicator(
-                            // Optionally use loadingProgress to show download percentage
-                            value: loadingProgress.expectedTotalBytes != null
-                                ? loadingProgress.cumulativeBytesLoaded /
-                                    loadingProgress.expectedTotalBytes!
-                                : null,
-                          ),
-                        );
-                      }, errorBuilder: (BuildContext context, Object exception,
-                              StackTrace? stackTrace) {
-                        // You can return any widget here, e.g., an icon or placeholder text
-                        return Container();
-                      }),
+                      child: UniversalImage(path: food.image_small_url, fit: BoxFit.contain)
                     ),
                     Expanded(
                       flex: 4,
@@ -478,7 +459,8 @@ Widget foodItemCard(FoodItem food, Function saveFoodFunc, Function addFoodFunc,
                                 textAlign: TextAlign.right,
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 10, // The starting font size
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12, // The starting font size
                                   shadows: [
                                     Shadow(color: Colors.black, blurRadius: 2.0)
                                   ],
@@ -495,7 +477,8 @@ Widget foodItemCard(FoodItem food, Function saveFoodFunc, Function addFoodFunc,
                                 textAlign: TextAlign.right,
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 10,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
                                   shadows: [
                                     Shadow(color: Colors.black, blurRadius: 2.0)
                                   ],
@@ -529,7 +512,7 @@ Widget foodItemCard(FoodItem food, Function saveFoodFunc, Function addFoodFunc,
                       maxFontSize: 40,
                       maxLines: 2,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600,),
                     ),
                   ),
                 ),

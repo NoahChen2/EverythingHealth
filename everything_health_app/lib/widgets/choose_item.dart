@@ -392,26 +392,7 @@ Widget build(BuildContext context) {
             child: SizedBox(
               height: pageHeight * .75,
               width: pageWidth,
-              child: Image.network(currFood.img_url, fit: BoxFit.contain,
-                  loadingBuilder: (BuildContext context, Widget child,
-                      ImageChunkEvent? loadingProgress) {
-                if (loadingProgress == null) {
-                  return child; // Image is fully loaded
-                }
-                return Center(
-                  child: CircularProgressIndicator(
-                    // Optionally use loadingProgress to show download percentage
-                    value: loadingProgress.expectedTotalBytes != null
-                        ? loadingProgress.cumulativeBytesLoaded /
-                            loadingProgress.expectedTotalBytes!
-                        : null,
-                  ),
-                );
-              }, errorBuilder: (BuildContext context, Object exception,
-                      StackTrace? stackTrace) {
-                // You can return any widget here, e.g., an icon or placeholder text
-                return Container();
-              }),
+              child: UniversalImage(path: currFood.img_url, fit: BoxFit.contain)
             ),
           ),
         ),
@@ -478,33 +459,7 @@ Widget build(BuildContext context) {
                                         bottom: Radius.circular(25))),
                                 clipBehavior: Clip.antiAlias,
                                 child: Center(
-                                  child: Image.network(currFood.image_small_url,
-                                      fit: BoxFit.cover,
-                                      loadingBuilder: (BuildContext context,
-                                          Widget child,
-                                          ImageChunkEvent? loadingProgress) {
-                                    if (loadingProgress == null) {
-                                      return child; // Image is fully loaded
-                                    }
-                                    return Center(
-                                      child: CircularProgressIndicator(
-                                        // Optionally use loadingProgress to show download percentage
-                                        value: loadingProgress
-                                                    .expectedTotalBytes !=
-                                                null
-                                            ? loadingProgress
-                                                    .cumulativeBytesLoaded /
-                                                loadingProgress
-                                                    .expectedTotalBytes!
-                                            : null,
-                                      ),
-                                    );
-                                  }, errorBuilder: (BuildContext context,
-                                          Object exception,
-                                          StackTrace? stackTrace) {
-                                    // You can return any widget here, e.g., an icon or placeholder text
-                                    return Container();
-                                  }),
+                                  child: UniversalImage(path: currFood.image_small_url, fit: BoxFit.contain)
                                 ),
                               )),
                           Expanded(

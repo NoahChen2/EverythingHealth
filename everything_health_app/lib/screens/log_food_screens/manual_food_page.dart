@@ -34,7 +34,7 @@ class ManualFoodPage extends StatelessWidget {
             fats: 0,
             protein: 0,
             sugar: 0,
-            density: 0,
+            density: 1,
             densityRequired: false,
             normalized_name: _normalizeText("​New Food ${DateFormat('yyyy/MM/dd HH:mm').format(DateTime.now())}"),
             servings: 1,

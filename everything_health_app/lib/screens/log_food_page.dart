@@ -1,4 +1,6 @@
 // ignore_for_file: non_constant_identifier_names
+import 'dart:io';
+
 import 'package:everything_health_app/main.dart';
 import 'package:everything_health_app/models/history_foods.dart';
 import 'package:everything_health_app/models/saved_foods.dart';
@@ -360,5 +362,45 @@ class FoodItem {
       'servings': servings,
       'meal': meal,
     };
+  }
+}
+
+
+class UniversalImage extends StatelessWidget {
+  final String path;
+  final BoxFit fit;
+
+  const UniversalImage({
+    super.key,
+    required this.path,
+    this.fit = BoxFit.cover, // Default fit
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Check if the path is a web URL
+    if (path.startsWith('http')) {
+      // Use Image.network for web URLs
+      return Image.network(
+        path,
+        fit: fit,
+        // Optional: Add loading and error placeholders
+        loadingBuilder: (context, child, progress) {
+          return progress == null ? child : const Center(child: CircularProgressIndicator());
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return const Icon(Icons.broken_image, color: Colors.grey);
+        },
+      );
+    } else {
+      // Use Image.file for local file paths
+      return Image.file(
+        File(path),
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) {
+          return const Icon(Icons.error, color: Colors.red);
+        },
+      );
+    }
   }
 }
