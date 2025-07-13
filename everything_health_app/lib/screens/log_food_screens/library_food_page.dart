@@ -519,6 +519,7 @@ Widget foodItemCard(FoodItem food, Function saveFoodFunc, Function addFoodFunc,
               ),
             ),
             Divider(color: const Color.fromARGB(38, 255, 255, 255), height: 1),
+            Container(height: 5, color: const Color.fromARGB(141, 0, 0, 0),),
             Expanded(
               flex: 4,
               child: Container(

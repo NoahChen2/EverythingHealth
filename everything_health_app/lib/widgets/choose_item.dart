@@ -1,28 +1,14 @@
 import 'dart:math';
-import 'dart:convert';
 import 'package:everything_health_app/main.dart';
 import 'package:everything_health_app/models/history_foods.dart';
 import 'package:everything_health_app/models/saved_foods.dart';
 import 'package:everything_health_app/screens/log_food_page.dart';
+import 'package:everything_health_app/services/nutrition_services.dart';
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
-
-import 'package:isar/isar.dart';
-
-void saveFoodToIsarSave(Isar isar, String entryToSave) {
-final entryAsMap = jsonDecode(entryToSave);
-final newEntry = SavedFood.fromJson(entryAsMap);
-isar.savedFoods.put(newEntry);
-}
-
-Future<void> saveFoodToIsarHistory(Isar isar, String entryToSave) async {
-final entryAsMap = jsonDecode(entryToSave);
-final newEntry = HistoryFood.fromJson(entryAsMap);
-isar.historyFoods.put(newEntry);
-}
 
 class ChooseFoodItem extends StatefulWidget {
 final FoodItem food;
@@ -56,6 +42,7 @@ bool _autoSaveApply = false;
 final FocusNode _titleFocusNode = FocusNode();
 final FocusNode _codeFocusNode = FocusNode();
 bool _autoHighlight = false;
+final NutritionService nutritionService = NutritionService();
 
 @override
 void initState() {
@@ -103,6 +90,13 @@ Future<void> _handleApplyNew() async {
 
 Future<void> _handleApplySave () async {
     _currFoodVals![10] = _currFoodVals![10].replaceAll('​', '');
+    
+    String tempImgPath = await nutritionService.imgRamToDrive(widget.food['img_url']);
+    if (tempImgPath != widget.food['img_url'])
+    {
+      widget.food['img_url'] = tempImgPath;
+      widget.food['image_small_url'] = tempImgPath;
+    }
     FoodItem tempFood = FoodItem(
       name: _currFoodVals![10],
       serving_size: _currFoodVals![1],
@@ -187,6 +181,12 @@ void _scaleUpFoods(num scale) {
 
 Future<void> _addFood() async {
   _currFoodVals![10] = _currFoodVals![10].replaceAll('​', '');
+  String tempImgPath = await nutritionService.imgRamToDrive(widget.food['img_url']);
+  if (tempImgPath != widget.food['img_url'])
+  {
+    widget.food['img_url'] = tempImgPath;
+    widget.food['image_small_url'] = tempImgPath;
+  }
   FoodItem tempFood = FoodItem(
     name: _currFoodVals![10],
     serving_size: _currFoodVals![1],
@@ -230,6 +230,12 @@ Future<void> _saveFood() async {
   else{
     setState(() => _isSaved = true);
     _currFoodVals![10] = _currFoodVals![10].replaceAll('​', '');
+    String tempImgPath = await nutritionService.imgRamToDrive(widget.food['img_url']);
+    if (tempImgPath != widget.food['img_url'])
+    {
+      widget.food['img_url'] = tempImgPath;
+      widget.food['image_small_url'] = tempImgPath;
+    }
     FoodItem tempFood = FoodItem(
       name: _currFoodVals![10],
       serving_size: _currFoodVals![1],

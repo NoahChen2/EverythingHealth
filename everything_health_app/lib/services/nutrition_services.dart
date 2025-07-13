@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:image/image.dart' as img;
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 
 class NutritionService {
@@ -75,6 +78,27 @@ class NutritionService {
       'fat_100g': 7.648909966293577, 
       'sugar_100g': 3.2624425897884057
     };
+  }
+
+  Future<String> imgRamToDrive(String currPath) async {
+    final Directory tempDir = await getTemporaryDirectory();
+    final Directory appDir = await getApplicationDocumentsDirectory();
+    if (!currPath.startsWith('http') && currPath.contains(tempDir.path)) {
+      try {
+        final File tempFile = File(currPath);
+        final String fileName = path.basename(currPath);
+        final String permanentPath = '${appDir.path}/$fileName';
+
+        // Copy the file to the permanent directory
+        final File newFile = await tempFile.copy(permanentPath);
+        
+        // Add the NEW, permanent path to our list
+        return newFile.path;
+      } catch (e) {
+        print('Failed to save temp file $currPath: $e');
+      }
+    }
+    return currPath;
   }
 
   /// Closes the interpreter to free up resources.

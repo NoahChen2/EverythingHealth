@@ -27,6 +27,7 @@ dependencies:
   mobile_scanner: ^5.1.1 # Add this line
   image: ^4.5.4
   tflite_flutter: ^0.11.0
+  path: ^1.9.1
 
 dev_dependencies:
   flutter_test:

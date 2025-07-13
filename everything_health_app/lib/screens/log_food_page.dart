@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:everything_health_app/main.dart';
 import 'package:everything_health_app/models/history_foods.dart';
 import 'package:everything_health_app/models/saved_foods.dart';
+import 'package:everything_health_app/services/nutrition_services.dart';
 import 'package:flutter/material.dart';
 // ignore: unnecessary_import
 import 'package:flutter/rendering.dart';
@@ -36,6 +37,7 @@ class LogFoodPage extends StatefulWidget {
 
 class _LogFoodPageState extends State<LogFoodPage> {
   static FoodItem defaultFood = FoodItem(name: "DEFAULT_NAME", serving_size: "DEFAULT_SERVING_SIZE", grams: -1, calories: -1, carbs: -1, fats: -1, protein: -1, sugar: -1, normalized_name: "NORMAL_DEFAULT_NAME");
+  final NutritionService nutritionService = NutritionService();
   FoodItem _addingFood = defaultFood;
   
   Function _addingFoodFunc(FoodItem food){
@@ -75,6 +77,12 @@ class _LogFoodPageState extends State<LogFoodPage> {
       {
         tempFoodJson['time'] = DateTime.now().toUtc().difference(DateTime.utc(1970, 1, 1)).inSeconds;
       }
+      String tempImgPath = await nutritionService.imgRamToDrive(tempFoodJson['img_url']);
+      if (tempImgPath != tempFoodJson['img_url'])
+      {
+        tempFoodJson['img_url'] = tempImgPath;
+        tempFoodJson['image_small_url'] = tempImgPath;
+      }
       SavedFood newEntry = SavedFood.fromJson(tempFoodJson);
       
       await isar.writeTxn(() async {
@@ -87,6 +95,13 @@ class _LogFoodPageState extends State<LogFoodPage> {
 
   Future<void> _addFoodToHistory(FoodItem food) async
   {
+    
+    String tempImgPath = await nutritionService.imgRamToDrive(food['img_url']);
+    if (tempImgPath != food['img_url'])
+    {
+        food['img_url'] = tempImgPath;
+        food['image_small_url'] = tempImgPath;
+    }
     food.time = DateTime.now().toUtc().difference(DateTime.utc(1970, 1, 1)).inSeconds;
     HistoryFood newEntry = HistoryFood.fromJson(food.toJson());
     await isar.writeTxn(() async {
@@ -389,7 +404,7 @@ class UniversalImage extends StatelessWidget {
           return progress == null ? child : const Center(child: CircularProgressIndicator());
         },
         errorBuilder: (context, error, stackTrace) {
-          return const Icon(Icons.broken_image, color: Colors.grey);
+          return SizedBox.shrink();
         },
       );
     } else {
@@ -398,7 +413,7 @@ class UniversalImage extends StatelessWidget {
         File(path),
         fit: fit,
         errorBuilder: (context, error, stackTrace) {
-          return const Icon(Icons.error, color: Colors.red);
+          return SizedBox.shrink();
         },
       );
     }
