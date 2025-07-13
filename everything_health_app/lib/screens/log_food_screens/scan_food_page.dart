@@ -23,8 +23,16 @@ import '../../services/nutrition_services.dart';
 
 class ScanFoodPage extends StatefulWidget {
   final Function addFoodFunc;
+  final Future<void> Function(FoodItem) saveFoodFunc;
+  final Future<void> Function(FoodItem) addFoodToHistory;
+  final void Function() refreshPage;
 
-  const ScanFoodPage({super.key, required this.addFoodFunc});
+  const ScanFoodPage(
+      {super.key,
+      required this.addFoodFunc,
+      required this.saveFoodFunc,
+      required this.addFoodToHistory,
+      required this.refreshPage});
 
   @override
   State<ScanFoodPage> createState() => _ScanFoodPageState();
@@ -49,40 +57,33 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
   void initState() {
     super.initState();
     // Call a new function to handle all initializations
-    _initializeServices();
-    elementState = 0;
-  }
-
-  Future<void> _initializeServices() async {
-    // Load the model and initialize the camera concurrently
-    await Future.wait([
-      _nutritionService.loadModel(),
-      _initializeCamera(),
-    ]);
-
-    // Once everything is loaded, update the state to unlock the UI
+    _nutritionService.loadModel().then((_) {
     if (mounted) {
       setState(() {
         _isLoading = false;
       });
     }
+  });
+    elementState = 0;
   }
-  Future<void> barcodeDetected(capture) async {
-    if (!_isProcessingScan && capture.barcodes.isNotEmpty) {
+
+  Future<void> barcodeDetected({dynamic capture, bool onlyWebSearch = false, String? barcode}) async {
+    if (!_isProcessingScan && (onlyWebSearch || capture.barcodes.isNotEmpty)) {
       setState(() {
         _isProcessingScan = true; // Prevents multiple rapid scans
         _isLoading = true;
+        foundFoodStatus = "Searching Barcode...";
         elementState = 0;
       });
 
-      final String barcodeValue =
-          capture.barcodes.first.rawValue ?? "Could not read barcode";
+      final String barcodeValue = 
+          (barcode ?? capture.barcodes.first.rawValue ?? "Could not read barcode").toString();
       final savedFood = await isar.savedFoods
           .filter()
           .codeEqualTo(int.parse(barcodeValue))
           .findFirst();
       FoodItem? foundFood;
-      if (savedFood != null) {
+      if (savedFood != null && !onlyWebSearch) {
         foundFood = FoodItem.fromJson(savedFood.toJson());
         foundFoodStatus = "Food found in Saved Foods";
       } else {
@@ -90,7 +91,7 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
             .filter()
             .codeEqualTo(int.parse(barcodeValue))
             .findFirst();
-        if (historyFood != null) {
+        if (historyFood != null && !onlyWebSearch) {
           foundFood = FoodItem.fromJson(historyFood.toJson());
           foundFoodStatus = "Food found in History Foods";
         } else {
@@ -331,7 +332,6 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
         _isProcessingScan = false;
       });
       _scannerController.stop();
-      _initializeCamera();
     }
   }
 
@@ -481,7 +481,11 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
     } finally {
       setState(() { _isCapturing = false; });
     }
-    _initializeCamera();
+    if (_controller != null) {
+      await _controller!.dispose();
+      _controller = null;
+      _initializeControllerFuture = null;
+    }
   }
 
   // This function handles the "Retake" button press
@@ -563,7 +567,19 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                 children: [
                   Column(children: [
                     GestureDetector(
-                      onTap: () => setState(() => elementState = 1),
+                      onTap:() async {
+                        // Asynchronously dispose of the camera controller if it exists.
+                        if (_controller != null) {
+                          await _controller!.dispose();
+                          _controller = null;
+                          _initializeControllerFuture = null;
+                        }
+                        await _scannerController.start();
+                        // Now switch to the barcode scanner state.
+                        if (mounted) {
+                          setState(() => elementState = 1);
+                        }
+                      },
                       child: Container(
                           margin: EdgeInsets.only(top: 20, left: 10, right: 10),
                           height: 100,
@@ -590,7 +606,11 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                               ])),
                     ),
                     GestureDetector(
-                      onTap: () => setState(() => elementState = 2),
+                      onTap: () {
+                        _scannerController.stop(); 
+                        _initializeCamera();     
+                        setState(() => elementState = 2);
+                      },
                       child: Container(
                           margin: EdgeInsets.only(top: 20, left: 10, right: 10),
                           height: 100,
@@ -628,6 +648,7 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                             foundFoodStatus = "none";
                             food = null;
                           });
+                          widget.refreshPage();
                         },
                         child: Container(
                           decoration:
@@ -643,11 +664,11 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                 children: [
-                                  _isLoading && foundFoodStatus != "Analyzing Image..."? 
+                                  _isLoading && foundFoodStatus != "Analyzing Image..."  && foundFoodStatus != "Searching Barcode..."? 
                                   Text(_loadError, style: const TextStyle(color: Colors.redAccent, fontSize: 16), textAlign: TextAlign.center,): 
                                   Text(foundFoodStatus, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600), textAlign: TextAlign.center, overflow: TextOverflow.clip,),
                                   food != null ? 
-                                  (!food!.name.startsWith("​New Food") || ["Food Scanned Successfully", "Unable to Scan Food"].contains(foundFoodStatus)) && foundFoodStatus != "Analyzing Image..."? 
+                                  (!food!.name.startsWith("​New Food") || ["Food Scanned Successfully", "Unable to Scan Food"].contains(foundFoodStatus)) && foundFoodStatus != "Analyzing Image..." && foundFoodStatus != "Searching Barcode..."? 
                                     Container(
                                       width: 300,
                                       height: 300,
@@ -759,12 +780,45 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                                                   ),
                                                 ),
                                               ),
+                                              Divider(color: const Color.fromARGB(38, 255, 255, 255), height: 1),
+                                              Container(height: 5, color: const Color.fromARGB(141, 0, 0, 0),),
+                                              Expanded(
+                                                flex: 4,
+                                                child: Container(
+                                                    width: double.infinity,
+                                                    color: const Color.fromARGB(141, 0, 0, 0),
+                                                    child: Row(
+                                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        Expanded(
+                                                          child: GestureDetector(
+                                                              onTap: () => widget.addFoodToHistory(food!),
+                                                              child: Icon(Icons.add, color: Colors.white, size: 40)),
+                                                        ),
+                                                        Expanded(
+                                                          child: GestureDetector(
+                                                              onTap: () async {
+                                                                await widget.saveFoodFunc(food!);
+                                                                setState(() => food!.isSaved = food!.isSaved);
+                                                              },
+                                                              child: Icon(
+                                                                  food!.isSaved
+                                                                      ? Icons.bookmark
+                                                                      : Icons.bookmark_outline,
+                                                                  color: Colors.white, size: 40)),
+                                                        )
+                                                      ],
+                                                    )),
+                                              ),
+                                            
                                             ],
                                           ),
                                         ),
                                       ),
                                     )
                                     :
+                                    foundFoodStatus != "Analyzing Image..." && foundFoodStatus != "Searching Barcode..." ?
                                     GestureDetector(
                                         onTap: widget.addFoodFunc(food),
                                         child: Container(
@@ -787,11 +841,11 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                                                 Icon(Icons.add, color: Colors.white),
                                               ])
                                         ),
-                                      )
+                                      ) : SizedBox.shrink()
                                     : SizedBox.shrink(),
                                     !["Food found in Saved Foods", "Food found in History Foods"].contains(foundFoodStatus) || food!.code == -1 ? SizedBox.shrink() : 
                                       GestureDetector(
-                                          onTap: () => print("Searching api (add later)"),
+                                          onTap: () => barcodeDetected(onlyWebSearch: true, barcode: (food!.code).toString()),
                                           child: Center(
                                             child: Container(
                                               margin: EdgeInsets.only(top: 20, left: 10, right: 10),
@@ -846,6 +900,7 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
       );
     } else if (elementState == 1) {
       return Scaffold(
+        key: UniqueKey(),
         backgroundColor: const Color.fromARGB(255, 0, 36, 72),
         body: Container(
           margin: EdgeInsets.only(top: 60),
@@ -870,13 +925,10 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                             fit: BoxFit.fitWidth,
                             child: Container(
                               width: cropSize,
-                              height: cropSize *
-                                  (cropSize == pageWidth
-                                      ? _controller!.value.aspectRatio
-                                      : 1 / _controller!.value.aspectRatio),
+                              height: cropSize,
                               child: MobileScanner(
                                 controller: _scannerController,
-                                onDetect: (capture) => barcodeDetected(capture),
+                                onDetect: (capture) => barcodeDetected(capture: capture,),
                               ),
                             ),
                           ),
@@ -896,7 +948,7 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                       top: 5,
                       left: 5,
                       child: GestureDetector(
-                          onTap: () {setState(() => elementState = 0);_scannerController.stop();_initializeCamera();},
+                          onTap: () {_scannerController.stop();setState(() => elementState = 0);},
                           child: Container(
                               height: 50,
                               width: 50,
@@ -911,7 +963,15 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
           ),
         ),
       );
-    } else {
+    }  else if (elementState == 3) { // <-- ADD THIS BLOCK
+      // This is a temporary loading view to force a full widget tree rebuild.
+      return const Scaffold(
+        backgroundColor: Color.fromARGB(255, 0, 36, 72),
+        body: Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+      );
+    }else {
       return Scaffold(
         backgroundColor:
         _capturedImage == null ?
@@ -925,7 +985,9 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                       top: 5,
                       left: 5,
                       child: GestureDetector(
-                          onTap: () => setState(() => elementState = 0),
+                          onTap: () {
+                            _controller?.dispose();
+                            setState(() => elementState = 0);},
                           child: Container(
                               height: 50,
                               width: 50,
@@ -1010,7 +1072,20 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                                       top: 5,
                                       left: 5,
                                       child: GestureDetector(
-                                          onTap: () => setState(() => elementState = 0),
+                                          onTap: () async {
+                                            // First, properly dispose of the CameraController.
+                                            if (_controller != null) {
+                                              await _controller!.dispose();
+                                            }
+                                            // Nullify the controller and its future to prevent errors.
+                                            _controller = null;
+                                            _initializeControllerFuture = null;
+
+                                            // THEN, update the state to navigate back to the menu.
+                                            if (mounted) {
+                                              setState(() => elementState = 0);
+                                            }
+                                          },
                                           child: Container(
                                               height: 50,
                                               width: 50,

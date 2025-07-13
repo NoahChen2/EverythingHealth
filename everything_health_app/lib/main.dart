@@ -80,7 +80,7 @@ Future<void> main() async {
     directory: dir.path,
   );
   
-  await deleteUnusedFiles();
+  await deleteUnusedFiles();  
 
   cameras = await availableCameras();
   runApp(const MyApp());

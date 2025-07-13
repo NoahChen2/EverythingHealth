@@ -39,7 +39,8 @@ class _LogFoodPageState extends State<LogFoodPage> {
   static FoodItem defaultFood = FoodItem(name: "DEFAULT_NAME", serving_size: "DEFAULT_SERVING_SIZE", grams: -1, calories: -1, carbs: -1, fats: -1, protein: -1, sugar: -1, normalized_name: "NORMAL_DEFAULT_NAME");
   final NutritionService nutritionService = NutritionService();
   FoodItem _addingFood = defaultFood;
-  
+  Key key = UniqueKey();
+
   Function _addingFoodFunc(FoodItem food){
     return () {
       setState((){
@@ -112,6 +113,11 @@ class _LogFoodPageState extends State<LogFoodPage> {
     func();
   }
 
+  void refreshPage(){
+    setState(() => key = UniqueKey());
+    print("DONE");
+  }
+
   @override
   Widget build(BuildContext context) {
     Color selectedColor = Colors.white;
@@ -141,14 +147,14 @@ class _LogFoodPageState extends State<LogFoodPage> {
           onTap: () => widget.onLogFoodSelection(2)),
       buildNavItem(
           icon: Icons.shelves,
-          label: "Saved",
+          label: "Library",
           colorUsed: widget.logFoodIndex == 3 ? selectedColor : nonSelectedColor,
           onTap: () => widget.onLogFoodSelection(3)),
     ];
 
     var logFoodPagesContent = [ // Specific content for each sub-page
-      SearchFoodPage(addFoodFunc: _addingFoodFunc, saveFoodFunc: _addFoodToSaved),
-      ScanFoodPage(addFoodFunc: _addingFoodFunc,),
+      SearchFoodPage(addFoodFunc: _addingFoodFunc, saveFoodFunc: _addFoodToSaved,),
+      ScanFoodPage(addFoodFunc: _addingFoodFunc, saveFoodFunc: _addFoodToSaved, addFoodToHistory: _addFoodToHistory, refreshPage: refreshPage, key: key),
       ManualFoodPage(addFoodFunc: _addingFoodFunc,),
       LibraryFoodPage(addFoodFunc: _addingFoodFunc, saveFoodFunc: _addFoodToSaved, addFoodToHistory: _addFoodToHistory,),
     ];
