@@ -1,5 +1,7 @@
+import 'package:everything_health_app/services/color_services.dart';
 import 'package:flutter/material.dart';
 import 'nav_item_builder.dart'; // Import the new nav item builder
+
 
 class MyBottomNavigationBar extends StatelessWidget {
   final int currentIndex;
@@ -15,11 +17,12 @@ class MyBottomNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double barHeight = 60;
-    Color barColor = const Color.fromARGB(255, 0, 36, 72);
-    Color plusColor = Colors.pinkAccent;
-    Color nonSelectedColor = const Color.fromARGB(255, 117, 115, 119);
-    Color selectedColor = Colors.white;
+    double barHeight = 90;
+    Color barColor = ColorTheme["primaryBG"]!;
+    Color plusColor = ColorTheme["tertiary"]!;
+    Color addColor = ColorTheme["textPrimary"]!.withAlpha(200);
+    Color nonSelectedColor = ColorTheme["coloredGrey"]!;
+    Color selectedColor = ColorTheme["textPrimary"]!;
 
     return Align(
       alignment: Alignment.bottomCenter,
@@ -90,7 +93,7 @@ class MyBottomNavigationBar extends StatelessWidget {
                             alignment: Alignment.center,
                             child: Icon(
                               Icons.add,
-                              color: barColor,
+                              color: addColor,
                               size: circleDiameter * 0.75,
                             ),
                           )
@@ -120,25 +123,29 @@ class MyTopNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double barHeight = 60;
-    Color barColor = const Color.fromARGB(255, 0, 36, 72);
-    return Align(
-      alignment: Alignment.topCenter,
-      child: Material(
-        color: Colors.transparent,
-        child: SizedBox(
-          width: double.infinity,
-          height: barHeight,
-          child: Container(
-            color: barColor,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: navItems,
+    Color barColor = ColorTheme["primaryBG"]!;
+    return Column(
+      children: [
+        Container(height: 29, color: barColor,),
+        Align(
+          alignment: Alignment.topCenter,
+          child: Material(
+            color: Colors.transparent,
+            child: SizedBox(
+              width: double.infinity,
+              height: 60,
+              child: Container(
+                color: barColor,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: navItems,
+                ),
+              ),
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 }

@@ -5,6 +5,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:everything_health_app/main.dart';
 import 'package:everything_health_app/models/history_foods.dart';
 import 'package:everything_health_app/models/saved_foods.dart';
+import 'package:everything_health_app/services/color_services.dart';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 import '../log_food_page.dart';
@@ -214,8 +215,8 @@ class _LibraryFoodPageState extends State<LibraryFoodPage> {
     return Stack(
       children: [
         Container(
-            margin: EdgeInsets.only(top: 60),
-            color: Color.fromARGB(255, 0, 36, 72),
+            margin: EdgeInsets.only(top: 90),
+            color: ColorTheme["primaryBG"],
             child: Stack(
               children: [
                 Column(
@@ -256,9 +257,9 @@ class _LibraryFoodPageState extends State<LibraryFoodPage> {
                       decoration: BoxDecoration(
                         border: Border(
                             bottom: BorderSide(
-                                color: const Color.fromARGB(75, 255, 255, 255),
+                                color: ColorTheme["primaryBGDark"]!.withAlpha(100),
                                 width: 10)),
-                        color: Color.fromARGB(94, 0, 36, 72),
+                        color: ColorTheme["primaryBG"]!.withAlpha(94),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -283,16 +284,15 @@ class _LibraryFoodPageState extends State<LibraryFoodPage> {
                                           borderRadius: BorderRadius.only(
                                               topLeft: Radius.circular(5)),
                                           color: selectionOptionsButton == 0
-                                              ? const Color.fromARGB(
-                                                  75, 255, 255, 255)
-                                              : const Color.fromARGB(75, 0, 0, 0),
+                                              ? ColorTheme["primaryLight"]!.withAlpha(100)
+                                              : ColorTheme["primaryBGDark"]!.withAlpha(100),
                                         ),
                                         child: AutoSizeText("Saved",
                                             minFontSize: 6,
                                             maxFontSize: 10,
                                             maxLines: 2,
                                             style: TextStyle(
-                                                color: Colors.white, fontSize: 12),
+                                                color: ColorTheme["textPrimary"], fontSize: 12),
                                             textAlign: TextAlign.center)),
                                   ),
                                 ),
@@ -308,17 +308,17 @@ class _LibraryFoodPageState extends State<LibraryFoodPage> {
                                             left: 0, right: 0, top: 5, bottom: 5),
                                         decoration: BoxDecoration(
                                           borderRadius: BorderRadius.only(),
+                                          border: Border.symmetric(vertical: BorderSide(width: 1, color: ColorTheme["textPrimary"]!.withAlpha(25))),
                                           color: selectionOptionsButton == 1
-                                              ? const Color.fromARGB(
-                                                  75, 255, 255, 255)
-                                              : const Color.fromARGB(75, 0, 0, 0),
+                                              ? ColorTheme["primaryLight"]!.withAlpha(100)
+                                              : ColorTheme["primaryBGDark"]!.withAlpha(100),
                                         ),
                                         child: AutoSizeText("History",
                                             minFontSize: 6,
                                             maxFontSize: 10,
                                             maxLines: 2,
                                             style: TextStyle(
-                                                color: Colors.white, fontSize: 12),
+                                                color: ColorTheme["textPrimary"], fontSize: 12),
                                             textAlign: TextAlign.center)),
                                   ),
                                 ),
@@ -336,15 +336,14 @@ class _LibraryFoodPageState extends State<LibraryFoodPage> {
                                           borderRadius: BorderRadius.only(
                                               topRight: Radius.circular(5)),
                                           color: selectionOptionsButton == 2
-                                              ? const Color.fromARGB(
-                                                  75, 255, 255, 255)
-                                              : const Color.fromARGB(75, 0, 0, 0),
+                                              ? ColorTheme["primaryLight"]!.withAlpha(100)
+                                              : ColorTheme["primaryBGDark"]!.withAlpha(100),
                                         ),
                                         child: AutoSizeText("Both",
                                             minFontSize: 6,
                                             maxFontSize: 10,
                                             maxLines: 2,
-                                            style: TextStyle(color: Colors.white),
+                                            style: TextStyle(color: ColorTheme["textPrimary"]),
                                             textAlign: TextAlign.center)),
                                   ),
                                 ),
@@ -374,11 +373,10 @@ class _LibraryFoodPageState extends State<LibraryFoodPage> {
                                             topLeft: Radius.circular(5),
                                             topRight: Radius.circular(5)),
                                         color: sortOptionsButton == -1 && filterOptionsButton == -1
-                                            ? const Color.fromARGB(75, 0, 0, 0)
-                                            : const Color.fromARGB(
-                                                75, 255, 255, 255),
+                                              ? ColorTheme["primaryBGDark"]!.withAlpha(100)
+                                              : ColorTheme["primaryLight"]!.withAlpha(100),
                                       ),
-                                      child: Icon(Icons.sort, color: Colors.white, size: 20)
+                                      child: Icon(Icons.sort, color: ColorTheme["textPrimary"], size: 20)
                                     ),
                                   ),
                                 ),
@@ -412,10 +410,10 @@ Widget foodItemCard(FoodItem food, Function saveFoodFunc, Function addFoodFunc,
   return Container(
     width: 100,
     decoration: BoxDecoration(
-      border: Border.all(color: const Color.fromARGB(255, 65, 224, 192)),
+      border: Border.all(color: ColorTheme["secondary"]!.withAlpha(50), width: 2),
       borderRadius: const BorderRadius.all(Radius.circular(10)),
       color:
-          const Color.fromARGB(255, 0, 23, 47), // A fallback background color
+          ColorTheme["primaryBGAlt"], // A fallback background color
     ),
     // ClipRRect ensures all children (like the image area) respect the rounded corners.
     child: ClipRRect(
@@ -457,13 +455,10 @@ Widget foodItemCard(FoodItem food, Function saveFoodFunc, Function addFoodFunc,
                                 minFontSize: 1,
                                 maxFontSize: 20,
                                 textAlign: TextAlign.right,
-                                style: const TextStyle(
-                                  color: Colors.white,
+                                style: TextStyle(
+                                  color: ColorTheme["textPrimary"],
                                   fontWeight: FontWeight.w600,
                                   fontSize: 12, // The starting font size
-                                  shadows: [
-                                    Shadow(color: Colors.black, blurRadius: 2.0)
-                                  ],
                                 ),
                               ),
                             ),
@@ -475,13 +470,10 @@ Widget foodItemCard(FoodItem food, Function saveFoodFunc, Function addFoodFunc,
                                 minFontSize: 1,
                                 maxFontSize: 20,
                                 textAlign: TextAlign.right,
-                                style: const TextStyle(
-                                  color: Colors.white,
+                                style: TextStyle(
+                                  color: ColorTheme["textPrimary"]!,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
-                                  shadows: [
-                                    Shadow(color: Colors.black, blurRadius: 2.0)
-                                  ],
                                 ),
                               ),
                             ),
@@ -499,32 +491,43 @@ Widget foodItemCard(FoodItem food, Function saveFoodFunc, Function addFoodFunc,
               flex: 5, // Give this section 40% of the height
               child: Container(
                 width: double.infinity,
-                color: const Color.fromARGB(141, 0, 0, 0),
+                color: ColorTheme["primaryBGAlt"],
                 // Center the text vertically and horizontally
                 child: Center(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4.0),
                     // Using AutoSizeText for the name. It works here because its parent
                     // Expanded gives it a clear, fixed area to fill.
-                    child: AutoSizeText(
-                      food.name,
+                    child: AutoSizeText.rich(
+                      TextSpan(
+                        children: <TextSpan>[
+                          TextSpan(
+                          text: food.servings != 1 ? "(${(food.servings).toStringAsPrecision(2)}) " : "",
+                          style: TextStyle(color: ColorTheme["textPrimary"]!.withAlpha(179)),
+                          ),
+                          TextSpan(
+                          text: food.name,
+                          style: TextStyle(color: ColorTheme["textPrimary"]),
+                          ),
+                        ],
+                      ),
                       minFontSize: 1,
                       maxFontSize: 40,
                       maxLines: 2,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600,),
+                      style: TextStyle(color: ColorTheme["textPrimary"], fontSize: 16, fontWeight: FontWeight.w600,),
                     ),
                   ),
                 ),
               ),
             ),
-            Divider(color: const Color.fromARGB(38, 255, 255, 255), height: 1),
-            Container(height: 5, color: const Color.fromARGB(141, 0, 0, 0),),
+            Divider(color: ColorTheme["textPrimary"]!.withAlpha(38), height: 1),
+            Container(height: 5, color: ColorTheme["primaryBGAlt"],),
             Expanded(
               flex: 4,
               child: Container(
                   width: double.infinity,
-                  color: const Color.fromARGB(141, 0, 0, 0),
+                  color: ColorTheme["primaryBGAlt"],
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -532,7 +535,7 @@ Widget foodItemCard(FoodItem food, Function saveFoodFunc, Function addFoodFunc,
                       Expanded(
                         child: GestureDetector(
                             onTap: () => addFoodToHistory(food),
-                            child: Icon(Icons.add, color: Colors.white, size: 20)),
+                            child: Icon(Icons.add, color: ColorTheme["textPrimary"], size: 20)),
                       ),
                       Expanded(
                         child: GestureDetector(
@@ -544,7 +547,7 @@ Widget foodItemCard(FoodItem food, Function saveFoodFunc, Function addFoodFunc,
                                 food.isSaved
                                     ? Icons.bookmark
                                     : Icons.bookmark_outline,
-                                color: Colors.white, size: 20)),
+                                color: ColorTheme["textPrimary"], size: 20)),
                       )
                     ],
                   )),
@@ -697,8 +700,8 @@ class _OptionsSelectMenuState extends State<OptionsSelectMenu>
         onVerticalDragEnd: _handleDragEnd,
         child: Container(
           height: screenHeight,
-          decoration: const BoxDecoration(
-            color: Color.fromARGB(255, 0, 36, 72),
+          decoration: BoxDecoration(
+            color: ColorTheme["primaryBG"],
             borderRadius: BorderRadius.only(
               topLeft: Radius.circular(20),
               topRight: Radius.circular(20),
@@ -712,19 +715,19 @@ class _OptionsSelectMenuState extends State<OptionsSelectMenu>
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text("Display Foods", style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white, fontSize: 18)),
+                    Text("Display Foods", style: TextStyle(fontWeight: FontWeight.w600, color: ColorTheme["textPrimary"], fontSize: 18)),
                     GestureDetector(
                       onTap: _dismiss,
                       child: Container(
                         decoration: BoxDecoration(color: const Color.fromARGB(117, 0, 0, 0), borderRadius: BorderRadius.circular(30)),
                         padding: const EdgeInsets.all(5),
-                        child: const Icon(Icons.close, color: Colors.white, size: 20),
+                        child: Icon(Icons.close, color: ColorTheme["textPrimary"], size: 20),
                       ),
                     ),
                   ],
                 ),
               ),
-              const Divider(color: Colors.white24, height: 1),
+              Divider(color: ColorTheme["textPrimary"]!.withAlpha(62), height: 1),
               Expanded(
                 child: ListView(
                   controller: _scrollController,
@@ -732,15 +735,15 @@ class _OptionsSelectMenuState extends State<OptionsSelectMenu>
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   children: [
                     // Your list content remains exactly the same
-                    const Padding(padding: EdgeInsets.only(left: 4, right: 4, top: 10, bottom: 5), child: Text("Sort", style: TextStyle(fontWeight: FontWeight.w600, color: Color.fromARGB(151, 255, 255, 255), fontSize: 16))),
+                    Padding(padding: EdgeInsets.only(left: 4, right: 4, top: 10, bottom: 5), child: Text("Sort", style: TextStyle(fontWeight: FontWeight.w600, color: ColorTheme["textPrimary"]!.withAlpha(151), fontSize: 16))),
                     tappableOptionEntry(func: () => widget.handleOptionButton("sort", -1), optionButton: widget.sortOptionsButton, targetNum: -1, text: "None"),
                     tappableOptionEntry(func: () => widget.handleOptionButton("sort", 0), optionButton: widget.sortOptionsButton, targetNum: 0, text: "Newest"),
                     tappableOptionEntry(func: () => widget.handleOptionButton("sort", 1), optionButton: widget.sortOptionsButton, targetNum: 1, text: "Oldest"),
                     tappableOptionEntry(func: () => widget.handleOptionButton("sort", 2), optionButton: widget.sortOptionsButton, targetNum: 2, text: "Calories Asc"),
                     tappableOptionEntry(func: () => widget.handleOptionButton("sort", 3), optionButton: widget.sortOptionsButton, targetNum: 3, text: "Calories Desc"),
                     tappableOptionEntry(func: () => widget.handleOptionButton("sort", 4), optionButton: widget.sortOptionsButton, targetNum: 4, text: "Protein Desc"),
-                    const Divider(color: Colors.white24, height: 1),
-                    Container(padding: const EdgeInsets.only(left: 4, right: 4, top: 10, bottom: 5), child: const Text("Filter", style: TextStyle(fontWeight: FontWeight.w600, color: Color.fromARGB(151, 255, 255, 255), fontSize: 16))),
+                    Divider(color: ColorTheme["textPrimary"]!.withAlpha(62), height: 1),
+                    Container(padding: EdgeInsets.only(left: 4, right: 4, top: 10, bottom: 5), child: Text("Filter", style: TextStyle(fontWeight: FontWeight.w600, color: ColorTheme["textPrimary"]!.withAlpha(151), fontSize: 16))),
                     tappableOptionEntry(func: () => widget.handleOptionButton("filter", -1), optionButton: widget.filterOptionsButton, targetNum: -1, text: "None"),
                     tappableOptionEntry(func: () => widget.handleOptionButton("filter", 0), optionButton: widget.filterOptionsButton, targetNum: 0, text: "Low Calorie"),
                     tappableOptionEntry(func: () => widget.handleOptionButton("filter", 1), optionButton: widget.filterOptionsButton, targetNum: 1, text: "High Calorie"),
@@ -767,14 +770,14 @@ class _OptionsSelectMenuState extends State<OptionsSelectMenu>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
-          color: optionButton == targetNum ? text == "None" ?  const Color.fromARGB(35, 255, 255, 255) : const Color.fromARGB(77, 255, 255, 255) : Colors.transparent,
+          color: optionButton == targetNum ? text == "None" ?  ColorTheme["textPrimary"]!.withAlpha(35) : ColorTheme["textPrimary"]!.withAlpha(77) : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Expanded(child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 12))),
-            Icon(Icons.check, color: optionButton == targetNum ? Colors.white : Colors.transparent, size: 20),
+            Expanded(child: Text(text, style: TextStyle(color: ColorTheme["textPrimary"], fontSize: 12))),
+            Icon(Icons.check, color: optionButton == targetNum ? ColorTheme["textPrimary"] : Colors.transparent, size: 20),
           ],
         ),
       ),

@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:everything_health_app/services/color_services.dart';
 import 'package:flutter/material.dart';
 
 // Moved _menuOptionRectangle here (can be kept private if only used by AddPage)
@@ -18,8 +19,9 @@ Widget _menuOptionRectangle({
 
       child: Container(
         decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 32, 70, 101),
+          color: ColorTheme["primaryBGAlt"]!,
           borderRadius: BorderRadius.circular(height * .08), // Relative radius
+          border: Border.all(color: ColorTheme["secondary"]!.withAlpha(50), width: 2),
         ),
         child: Stack(children: [
           Center(
@@ -33,7 +35,7 @@ Widget _menuOptionRectangle({
                 Text(label,
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: const Color.fromARGB(255, 255, 255, 255),
+                      color: ColorTheme["textPrimary"],
                       fontSize: height / 7, // Relative font size
                       decoration: TextDecoration.none,
                     )),
@@ -41,7 +43,7 @@ Widget _menuOptionRectangle({
           Material(
               color: Colors.transparent,
               child: InkWell(
-                highlightColor: Colors.black.withAlpha(120), // Corrected
+                highlightColor: ColorTheme["darkenMain"], // Corrected
                 hoverColor: Colors.transparent,
                 focusColor: Colors.transparent,
                 splashColor: Colors.transparent,
@@ -102,16 +104,16 @@ class AddPage extends StatelessWidget {
                 child: SizedBox(
                     width: double.infinity,
                     child: Container(
-                      color: const Color.fromARGB(255, 255, 153, 0),
+                      color: ColorTheme["primaryBG"],
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           const SizedBox(height: 5),
-                          const Text("Log Food",
+                          Text("Log Food",
                               style: TextStyle(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 20,
-                                color: Color.fromARGB(255, 255, 255, 255),
+                                color: ColorTheme["textPrimary"],
                                 overflow: TextOverflow.clip,
                                 decoration: TextDecoration.none,
                               )),
@@ -150,12 +152,12 @@ class AddPage extends StatelessWidget {
                             ]
                           ),
                           const SizedBox(height: 5),
-                          const Text("Log Excercise",
+                          Text("Log Excercise",
                               style: TextStyle(
                                 fontWeight: FontWeight.w700,
                                 overflow: TextOverflow.clip,
                                 fontSize: 20,
-                                color: Color.fromARGB(255, 255, 255, 255),
+                                color: ColorTheme["textPrimary"],
                                 decoration: TextDecoration.none,
                               )),
                           Row(

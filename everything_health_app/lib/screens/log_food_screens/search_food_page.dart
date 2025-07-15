@@ -6,6 +6,7 @@ import 'dart:math';
 
 import 'package:everything_health_app/main.dart';
 import 'package:everything_health_app/models/saved_foods.dart';
+import 'package:everything_health_app/services/color_services.dart';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -25,15 +26,15 @@ Widget _buildFoodListItem(FoodItem food, onTap, onSave) {
 
   return Container(
     decoration: BoxDecoration(
-      border: Border(top: BorderSide(color: Colors.grey.shade700, width: 0.5)), // Darker border
-      color: const Color.fromARGB(255, 1, 19, 37), // Darker background
+      border: Border(top: BorderSide(color: ColorTheme["grey"]!, width: 0.5)), // Darker border
+      color: ColorTheme["primaryBGDark"], // Darker background
     ),
     child: ListTile(
       title: Text(
         food.name,
-        style: const TextStyle(
+        style: TextStyle(
             fontSize: 17,
-            color: Colors.white,
+            color: ColorTheme["textPrimary"],
             fontWeight: FontWeight.w500, // Slightly less bold
             overflow: TextOverflow.ellipsis),
       ),
@@ -41,11 +42,12 @@ Widget _buildFoodListItem(FoodItem food, onTap, onSave) {
         subtitle,
         style: TextStyle(
             fontSize: 13,
-            color: const Color.fromARGB(194, 255, 255, 255), // Lighter subtitle
+            color: ColorTheme["textPrimary"]!.withAlpha(194), // Lighter subtitle
             overflow: TextOverflow.ellipsis),
       ),
       trailing: IconButton( // Changed to IconButton for better tap feedback
-        icon: Icon(food.isSaved ? Icons.bookmark : Icons.bookmark_outline, color: Colors.white),
+        icon: Icon(food.isSaved ? Icons.bookmark : Icons.bookmark_outline, color: ColorTheme["textPrimary"], // Lighter 
+        ),
         onPressed: onSave,
       ),
       onTap: onTap,
@@ -513,8 +515,8 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
   @override
   Widget build(BuildContext context) {
     return Container(
-        margin: EdgeInsets.only(top: 60),
-        color: const Color.fromARGB(255, 0, 36, 72),
+        margin: EdgeInsets.only(top: 90),
+        color: ColorTheme["primaryBG"],
         child: 
           Column(
               children: [
@@ -522,20 +524,20 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
                   padding: const EdgeInsets.all(12.0),
                   child: TextField(
                     controller: _searchController,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: ColorTheme["textPrimary"]),
                     decoration: InputDecoration(
                       hintText: "Search foods...",
-                      hintStyle: TextStyle(color: Colors.white.withAlpha(180)),
-                      prefixIcon: const Icon(Icons.search, color: Colors.white),
+                      hintStyle: TextStyle(color: ColorTheme["textPrimary"]!.withAlpha(180)),
+                      prefixIcon: Icon(Icons.search, color: ColorTheme["textPrimary"]),
                       filled: true,
-                      fillColor: Colors.white.withAlpha(25),
+                      fillColor: ColorTheme["textPrimary"]!.withAlpha(25),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8.0),
                         borderSide: BorderSide.none,
                       ),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
-                              icon: const Icon(Icons.clear, color: Colors.white),
+                              icon: Icon(Icons.clear, color: ColorTheme["textPrimary"]),
                               onPressed: () {
                                 _searchController.clear();
                                 // _onSearchChanged will be called by the listener
@@ -548,7 +550,7 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
                 _searchController.text.isNotEmpty ? GestureDetector(child: Container(
                     height: 80,
                     width: double.infinity,
-                    color: Colors. white,
+                    color: ColorTheme["textPrimary"],
                     child: Align(
                       alignment: Alignment.center,
                       child: Text("Search Entire Database"),
@@ -566,9 +568,9 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
                     child: Text(_loadError, style: const TextStyle(color: Colors.redAccent, fontSize: 16), textAlign: TextAlign.center,),
                   )))
                 else if (_displayedFoods.isEmpty && _searchController.text.isNotEmpty)
-                  const Expanded(child: Center(child: Text("No foods found.", style: TextStyle(color: Colors.white, fontSize: 16))))
+                  Expanded(child: Center(child: Text("No foods found.", style: TextStyle(color: ColorTheme["textPrimary"], fontSize: 16))))
                 else if (_displayedFoods.isEmpty && _searchController.text.isEmpty)
-                  const Expanded(child: Center(child: Text("Start typing to search for foods.", style: TextStyle(color: Colors.white70, fontSize: 16))))
+                  Expanded(child: Center(child: Text("Start typing to search for foods.", style: TextStyle(color: ColorTheme["textPrimary"]!.withAlpha(179), fontSize: 16))))
                 else
                   Expanded(
                     child: ListView.builder(

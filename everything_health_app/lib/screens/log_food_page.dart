@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:everything_health_app/main.dart';
 import 'package:everything_health_app/models/history_foods.dart';
 import 'package:everything_health_app/models/saved_foods.dart';
+import 'package:everything_health_app/services/color_services.dart';
 import 'package:everything_health_app/services/nutrition_services.dart';
 import 'package:flutter/material.dart';
 // ignore: unnecessary_import
@@ -120,15 +121,15 @@ class _LogFoodPageState extends State<LogFoodPage> {
 
   @override
   Widget build(BuildContext context) {
-    Color selectedColor = Colors.white;
-    Color nonSelectedColor = const Color.fromARGB(255, 117, 115, 119);
+    Color selectedColor = ColorTheme["textPrimary"]!;
+    Color nonSelectedColor = ColorTheme["coloredGrey"]!;
 
     // Nav items are built here now using the imported builder
     var navItems = [
       buildNavItem(
           icon: Icons.arrow_back,
           label: "Back",
-          colorUsed: const Color.fromARGB(255, 75, 223, 179),
+          colorUsed: ColorTheme["secondary"]!,
           onTap: () => widget.onLogFoodSelection(-1)),
       buildNavItem(
           icon: Icons.search,
@@ -175,9 +176,9 @@ class _LogFoodPageState extends State<LogFoodPage> {
     return Material( // Add Material for background and theming
       child: Stack(children: [
         Container(
-          height: 60,
+          height: 90,
           decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: Colors.grey.shade300, width: 1.0)),
+            border: Border(bottom: BorderSide(color: ColorTheme["veryLightGrey"]!, width: 1.0)),
           ),
           child: MyTopNavigationBar(
             logFoodIndex: widget.logFoodIndex,

@@ -3,12 +3,14 @@ import 'package:everything_health_app/main.dart';
 import 'package:everything_health_app/models/history_foods.dart';
 import 'package:everything_health_app/models/saved_foods.dart';
 import 'package:everything_health_app/screens/log_food_page.dart';
+import 'package:everything_health_app/services/color_services.dart';
 import 'package:everything_health_app/services/nutrition_services.dart';
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
+
 
 class ChooseFoodItem extends StatefulWidget {
 final FoodItem food;
@@ -390,7 +392,7 @@ Widget build(BuildContext context) {
             onTap: () => _handleEnlargeImage(),
             child: Container(
               decoration:
-                  BoxDecoration(color: const Color.fromARGB(150, 0, 0, 0)),
+                  BoxDecoration(color: ColorTheme["darkenMain"]),
             )),
         Center(
           child: IgnorePointer(
@@ -411,9 +413,9 @@ Widget build(BuildContext context) {
                     height: 50,
                     width: 50,
                     decoration: BoxDecoration(
-                        color: Color.fromARGB(155, 0, 0, 0),
+                        color: ColorTheme["darkenMain"],
                         borderRadius: BorderRadius.circular(20)),
-                    child: Icon(Icons.arrow_back_ios, color: Colors.white)))),
+                    child: Icon(Icons.arrow_back_ios, color: ColorTheme["textPrimary"])))),
       ]);
     }
     if (!_editing) {
@@ -433,7 +435,7 @@ Widget build(BuildContext context) {
           },
           child: Container(
             decoration:
-                BoxDecoration(color: const Color.fromARGB(150, 0, 0, 0)),
+                BoxDecoration(color: ColorTheme["darkenMain"]),
           )),
       Stack(children: [
         Center(
@@ -442,8 +444,9 @@ Widget build(BuildContext context) {
               width: pageWidth * .9,
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
-                  color: Color.fromARGB(255, 0, 36, 72),
-                  borderRadius: BorderRadius.circular(pageWidth * .05)),
+                  color: ColorTheme["primaryBG"],
+                  borderRadius: BorderRadius.circular(pageWidth * .05),
+              ),
               child: Column(
                 children: [
                   Container(
@@ -476,7 +479,7 @@ Widget build(BuildContext context) {
                                   Container(
                                       height: 25,
                                       width: pageWidth * .5,
-                                      color: Color.fromARGB(255, 26, 87, 75),
+                                      color: ColorTheme["secondaryBG"],
                                       child: Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceEvenly,
@@ -488,20 +491,20 @@ Widget build(BuildContext context) {
                                               child: GestureDetector(
                                                 onTap: () => _toggleEditAll(),
                                                 child: _editing
-                                                    ? Icon(Icons.check, color: Colors.white)
-                                                    : Icon(Icons.edit, color: Colors.white),
+                                                    ? Icon(Icons.check, color: ColorTheme["textPrimary"])
+                                                    : Icon(Icons.edit, color: ColorTheme["textPrimary"]),
                                               ),
                                             ),
                                             Expanded(
                                               child: GestureDetector(
                                                 onTap: _saveFood,
-                                                child: Icon(_isSaved ? Icons.bookmark : Icons.bookmark_outline, color: Colors.white),
+                                                child: Icon(_isSaved ? Icons.bookmark : Icons.bookmark_outline, color: ColorTheme["textPrimary"]),
                                               ),
                                             ),
                                             Expanded(
                                               child: GestureDetector(
                                                 onTap: () => _addFood(),
-                                                child: Icon(Icons.add, color: Colors.white),
+                                                child: Icon(Icons.add, color: ColorTheme["textPrimary"]),
                                               ),
                                             ),
                                           ])),
@@ -514,7 +517,7 @@ Widget build(BuildContext context) {
                                                 width: pageWidth * .5,
                                                 padding: EdgeInsets.all(5),
                                                 child: TextField(
-                                                  cursorColor: Colors.white,
+                                                  cursorColor: ColorTheme["textPrimary"],
                                                   keyboardType: TextInputType
                                                       .text,
                                                   focusNode: _titleFocusNode,
@@ -528,7 +531,7 @@ Widget build(BuildContext context) {
                                                           TextOverflow.ellipsis,
                                                       fontWeight: FontWeight.w600,
                                                       fontSize: 12,
-                                                      color: Colors.white),
+                                                      color: ColorTheme["textPrimary"]),
                                                 ),
                                               )
                                             : GestureDetector(
@@ -541,7 +544,7 @@ Widget build(BuildContext context) {
                                                     style: TextStyle(
                                                         fontSize: 30,
                                                         fontWeight: FontWeight.w600,
-                                                        color: Colors.white),
+                                                        color: ColorTheme["textPrimary"]),
                                                     maxLines: 10,
                                                     overflow: TextOverflow.ellipsis,
                                                   ),
@@ -567,7 +570,7 @@ Widget build(BuildContext context) {
                                                               fontSize: 12,
                                                               overflow:
                                                                   TextOverflow.clip,
-                                                              color: Colors.white,)),
+                                                              color: ColorTheme["textPrimary"],)),
                                                     ),
                                                   )
                                                 ]
@@ -577,7 +580,7 @@ Widget build(BuildContext context) {
                                                       height: 25,
                                                       width: pageWidth * .3,
                                                       child: TextField(
-                                                        cursorColor: Colors.white,
+                                                        cursorColor: ColorTheme["textPrimary"],
                                                         focusNode: _codeFocusNode,
                                                         textAlign: TextAlign.center,
                                                         keyboardType:
@@ -593,7 +596,7 @@ Widget build(BuildContext context) {
                                                             fontSize: 12,
                                                             overflow:
                                                                 TextOverflow.clip,
-                                                            color: Colors.white),
+                                                            color: ColorTheme["textPrimary"]),
                                                         inputFormatters: [
                                                           FilteringTextInputFormatter
                                                               .allow(
@@ -604,11 +607,11 @@ Widget build(BuildContext context) {
                                                   ),
                                                   GestureDetector(
                                                       onTap: _resetCode,
-                                                      child: Icon(Icons.undo, color: Colors.white)),
+                                                      child: Icon(Icons.undo, color: ColorTheme["textPrimary"])),
                                                   GestureDetector(
                                                       onTap: _scanCode,
                                                       child: Icon(Icons
-                                                          .qr_code_scanner_sharp, color: Colors.white)),
+                                                          .qr_code_scanner_sharp, color: ColorTheme["textPrimary"])),
                                                 ]),
                                     ),
                                   ),
@@ -678,11 +681,10 @@ Widget build(BuildContext context) {
                         Center(
                           child: Container(
                             decoration: BoxDecoration(
-                              color: viewNutritionInfo ? Color.fromARGB(83, 0, 0, 0): Color.fromARGB(0, 255, 255, 255),
+                              color: viewNutritionInfo ? ColorTheme["primaryBGDark"]: Color.fromARGB(0,0,0,0),
                               border: Border(
                                 top: BorderSide(
-                                    color: const Color.fromARGB(
-                                        50, 255, 255, 255)),
+                                    color: ColorTheme["textPrimary"]!.withAlpha(50)),
                               ),
                             ),
                             child: Center(
@@ -690,7 +692,7 @@ Widget build(BuildContext context) {
                                 onTap: () => _toggleViewNutritionInfo(),
                                 child: Container(
                                   padding: EdgeInsets.all(5),
-                                  color: Colors.transparent,
+                                  color: Color.fromARGB(0,0,0,0),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
@@ -699,13 +701,13 @@ Widget build(BuildContext context) {
                                             style: TextStyle(
                                                 overflow: TextOverflow.ellipsis,
                                                 fontSize: 12,
-                                                color: Colors.white)),
+                                                color: ColorTheme["textPrimary"])),
                                       ),
                                       Icon(
                                           viewNutritionInfo
                                               ? Icons.arrow_drop_down
                                               : Icons.arrow_right,
-                                          color: Colors.white),
+                                          color: ColorTheme["textPrimary"]),
                                     ],
                                   ),
                                 ),
@@ -787,11 +789,11 @@ Widget build(BuildContext context) {
                 height: 50,
                 width: 100,
                 decoration: BoxDecoration(
-                    color: const Color.fromARGB(255, 132, 79, 97),
-                    border: Border(left: BorderSide(color: const Color.fromARGB(255, 119, 122, 134), width: 2)),
+                    color: ColorTheme["tertiaryBG"],
+                    border: Border(left: BorderSide(color: ColorTheme["coloredGrey"]!, width: 2)),
                     borderRadius:
                         BorderRadius.only(topRight: Radius.circular(5))),
-                child: Center(child: Text("✓ Apply to Save", textAlign: TextAlign.center, style: TextStyle(color: Colors.white)))),
+                child: Center(child: Text("✓ Apply to Save", textAlign: TextAlign.center, style: TextStyle(color: ColorTheme["textPrimary"])))),
             ),
           ),
           Positioned(
@@ -803,11 +805,11 @@ Widget build(BuildContext context) {
                   height: 50,
                   width: 100,
                   decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 47, 87, 79),
-                      border: Border(right: BorderSide(color: const Color.fromARGB(255, 119, 122, 134), width: 2)),
+                      color: ColorTheme["secondaryBG"],
+                      border: Border(right: BorderSide(color: ColorTheme["coloredGrey"]!, width: 2)),
                       borderRadius:
                           BorderRadius.only(topLeft: Radius.circular(5))),
-                  child: Center(child: Text("+ Apply as New", textAlign: TextAlign.center,style: TextStyle(color: Colors.white)))),
+                  child: Center(child: Text("+ Apply as New", textAlign: TextAlign.center,style: TextStyle(color: ColorTheme["textPrimary"])))),
               ),
           ),
         ])
@@ -821,14 +823,14 @@ Widget build(BuildContext context) {
                 height: 50,
                 width: 100,
                 decoration: BoxDecoration(
-                    color: _editing ? const Color.fromARGB(255, 132, 79, 97) : Color.fromARGB(255, 26, 87, 75),
+                    color: _editing ? ColorTheme["secondaryBG"] : ColorTheme["tertiaryBG"],
                     borderRadius:
                         BorderRadius.vertical(top: Radius.circular(5))),
                 child: _editing
                     ? Center(
-                        child: Text(_autoSaveApply && _isSaved ? "✓ Apply to Save" : "✓ Apply", textAlign: TextAlign.center, style: TextStyle(color: Colors.white)))
+                        child: Text(_autoSaveApply && _isSaved ? "✓ Apply to Save" : "✓ Apply", textAlign: TextAlign.center, style: TextStyle(color: ColorTheme["textPrimary"])))
                     : Center(
-                        child: Text("+ Add", style: TextStyle(color: Colors.white)),
+                        child: Text("+ Add", style: TextStyle(color: ColorTheme["textPrimary"])),
                       )),
           ),
         )),
@@ -849,11 +851,11 @@ Widget build(BuildContext context) {
                 height: 50,
                 width: 50,
                 decoration: BoxDecoration(
-                    color: Color.fromARGB(255, 0, 88, 175),
+                    color: ColorTheme["primary"],
                     borderRadius: BorderRadius.circular(30)),
                 child: Icon(
                   Icons.close,
-                  color: Colors.white,
+                  color: ColorTheme["textPrimary"],
                 ),
               ),
             ))
@@ -1344,7 +1346,7 @@ Widget build(BuildContext context) {
     Expanded(
       child: Text("$label:",
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(fontSize: 12, color: Colors.white)),
+          style: TextStyle(fontSize: 12, color: ColorTheme["textPrimary"])),
     ),
       attributeID! != "meal"  && attributeID != "time"? 
       GestureDetector(
@@ -1353,20 +1355,20 @@ Widget build(BuildContext context) {
             "${(((_currFoodVals[11] && attributeID != "serving_size" && attributeID != "density" && attributeID != "servings" ? amount! * _currFoodVals[8] : amount!) * (attributeID == "calories" && units! == "kJ" ? 4.184 : 1)).toStringAsFixed(1))} ${units!}",
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.end,
-            style: TextStyle(fontSize: 12, color: Colors.white)),
+            style: TextStyle(fontSize: 12, color: ColorTheme["textPrimary"])),
         ) 
         : attributeID! == "meal" ?
           Container(
             alignment: Alignment.centerRight,
             child: DropdownButton<String>(
-              icon: Icon(Icons.arrow_drop_down, color: Colors.white),
+              icon: Icon(Icons.arrow_drop_down, color: ColorTheme["textPrimary"]),
               isDense: true,
-              dropdownColor: Color.fromARGB(255, 38, 131, 112),
+              dropdownColor: ColorTheme["secondaryBG"],
               value: _currFoodVals[14] != "" ? _currFoodVals[14] : "No Meal",
               style: TextStyle(
                   fontSize: 12,
                   overflow: TextOverflow.clip,
-                  color: Colors.white),
+                  color: ColorTheme["textPrimary"]),
               onChanged: (String? newValue) => {
                 setState(() {
                   _currFoodVals[14] = newValue != "No Meal" ? newValue : "";
@@ -1375,7 +1377,7 @@ Widget build(BuildContext context) {
               items: ["No Meal", "Breakfast", "Lunch", "Dinner", "Snack"]
                   .map((str) => DropdownMenuItem<String>(
                     value: str,
-                    child: Text(str, style: TextStyle(color: str == "No Meal" ? Color.fromARGB(175, 255, 255, 255) : Colors.white)),
+                    child: Text(str, style: TextStyle(color: str == "No Meal" ? ColorTheme["textPrimary"]!.withAlpha(175) : ColorTheme["textPrimary"])),
                     ),
                   )
                   .toList(),
@@ -1414,15 +1416,15 @@ Widget build(BuildContext context) {
                 
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    border: Border.all(color: Colors.white),
+                    color: Color.fromARGB(0,0,0,0),
+                    border: Border.all(color: ColorTheme["textPrimary"]!),
                     borderRadius: BorderRadius.all(Radius.circular(12)),
                   ),
                   padding: EdgeInsets.all(8),
                   child:
                     Row(
                       spacing: 5,
-                      children: [const Icon(Icons.calendar_today, size: 16, color: Colors.white), Text(DateFormat.yMMMd().format(DateTime.fromMillisecondsSinceEpoch(_currFoodVals[15] * 1000)), style: TextStyle(fontSize: 12, color: Colors.white))],
+                      children: [Icon(Icons.calendar_today, size: 16, color: ColorTheme["textPrimary"]), Text(DateFormat.yMMMd().format(DateTime.fromMillisecondsSinceEpoch(_currFoodVals[15] * 1000)), style: TextStyle(fontSize: 12, color: ColorTheme["textPrimary"]))],
                 ),
                 ),),
                 const SizedBox(width: 8), // Spacing between buttons
@@ -1454,15 +1456,15 @@ Widget build(BuildContext context) {
                   },
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.transparent,
-                      border: Border.all(color: Colors.white),
+                      color: Color.fromARGB(0,0,0,0),
+                      border: Border.all(color: ColorTheme["textPrimary"]!),
                       borderRadius: BorderRadius.all(Radius.circular(12)),
                   ),
                   padding: EdgeInsets.all(8),
                     child: Row(
                       spacing: 5,
                       children: 
-                      [Icon(Icons.access_time, size: 16, color: Colors.white),Text(DateFormat.jm().format(DateTime.fromMillisecondsSinceEpoch(_currFoodVals[15] * 1000)), style: TextStyle(fontSize: 12, color: Colors.white)),]
+                      [Icon(Icons.access_time, size: 16, color: ColorTheme["textPrimary"]),Text(DateFormat.jm().format(DateTime.fromMillisecondsSinceEpoch(_currFoodVals[15] * 1000)), style: TextStyle(fontSize: 12, color: ColorTheme["textPrimary"])),]
                       ),
                   ),
                 ),
@@ -1472,12 +1474,12 @@ Widget build(BuildContext context) {
 
   Widget attributeDisplayEdit = Column(
     children: [
-      attributeID == "density" ? Text("ⓘ Density required for accurate measurements", style: TextStyle(fontSize: 8, color: const Color.fromARGB(175, 255, 255, 255))) 
+      attributeID == "density" ? Text("ⓘ Density required for accurate measurements", style: TextStyle(fontSize: 8, color: ColorTheme["textPrimary"]!.withAlpha(175))) 
           : 
           SizedBox.shrink(),
       Row(children: [
         Icon(attributeID != "meal"  && attributeID != "time" && editingField? Icons.arrow_drop_down : Icons.arrow_right,
-          color: attributeID != "meal"  && attributeID != "time" ? Colors.white : Colors.transparent,
+          color: attributeID != "meal"  && attributeID != "time" ? ColorTheme["textPrimary"] : Color.fromARGB(0,0,0,0),
           size: 24,
         ),
         SizedBox(width: 10),
@@ -1485,14 +1487,14 @@ Widget build(BuildContext context) {
           child: Text(
             "$label:",
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 12, color: Colors.white),
+            style: TextStyle(fontSize: 12, color: ColorTheme["textPrimary"]),
             textAlign: TextAlign.start,
           ),
         ),
         attributeID != "meal" && attributeID != "time" ? SizedBox(
           width: 50,
           child: TextField(
-            cursorColor: Colors.white,
+            cursorColor: ColorTheme["textPrimary"],
             keyboardType: TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
               isDense: true,
@@ -1501,21 +1503,21 @@ Widget build(BuildContext context) {
             focusNode: _textFocusNode,
             controller: _textController,
             onChanged: _handleTextboxChange,
-            style: TextStyle(overflow: TextOverflow.ellipsis, fontSize: 12, color: Colors.white),
+            style: TextStyle(overflow: TextOverflow.ellipsis, fontSize: 12, color: ColorTheme["textPrimary"]),
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'[\d.,]*'))
             ],
           ),
         ) : attributeID! == "meal" ?
           DropdownButton<String>(
-            icon: Icon(Icons.arrow_drop_down, color: Colors.white, size: 24),
+            icon: Icon(Icons.arrow_drop_down, color: ColorTheme["textPrimary"], size: 24),
             isDense: true,
-            dropdownColor: Color.fromARGB(255, 38, 131, 112),
+            dropdownColor: ColorTheme["secondaryBG"],
             value: _currFoodVals[14] != "" ? _currFoodVals[14] : "No Meal",
             style: TextStyle(
                 fontSize: 12,
                 overflow: TextOverflow.clip,
-                color: Colors.white),
+                color: ColorTheme["textPrimary"]),
             onChanged: (String? newValue) => {
               setState(() {
                 _currFoodVals[14] = newValue != "No Meal" ? newValue : "";
@@ -1524,7 +1526,7 @@ Widget build(BuildContext context) {
             items: ["No Meal", "Breakfast", "Lunch", "Dinner", "Snack"]
                 .map((str) => DropdownMenuItem<String>(
                   value: str,
-                  child: Text(str, style: TextStyle(color: str == "No Meal" ? Color.fromARGB(175, 255, 255, 255) : Colors.white)),
+                  child: Text(str, style: TextStyle(color: str == "No Meal" ? ColorTheme["textPrimary"]!.withAlpha(175) : ColorTheme["textPrimary"])),
                 ))
                 .toList(),
           )
@@ -1563,15 +1565,15 @@ Widget build(BuildContext context) {
                 
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    border: Border.all(color: Colors.white),
+                    color: Color.fromARGB(0,0,0,0),
+                    border: Border.all(color: ColorTheme["textPrimary"]!),
                     borderRadius: BorderRadius.all(Radius.circular(12)),
                   ),
                   padding: EdgeInsets.all(8),
                   child:
                     Row(
                       spacing: 5,
-                      children: [const Icon(Icons.calendar_today, size: 16, color: Colors.white), Text(DateFormat.yMMMd().format(DateTime.fromMillisecondsSinceEpoch(_currFoodVals[15] * 1000)), style: TextStyle(fontSize: 12, color: Colors.white))],
+                      children: [Icon(Icons.calendar_today, size: 16, color: ColorTheme["textPrimary"]), Text(DateFormat.yMMMd().format(DateTime.fromMillisecondsSinceEpoch(_currFoodVals[15] * 1000)), style: TextStyle(fontSize: 12, color: ColorTheme["textPrimary"]))],
                 ),
                 ),),
                 const SizedBox(width: 8), // Spacing between buttons
@@ -1603,15 +1605,15 @@ Widget build(BuildContext context) {
                   },
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.transparent,
-                      border: Border.all(color: Colors.white),
+                      color: Color.fromARGB(0,0,0,0),
+                      border: Border.all(color: ColorTheme["textPrimary"]!),
                       borderRadius: BorderRadius.all(Radius.circular(12)),
                   ),
                   padding: EdgeInsets.all(8),
                     child: Row(
                       spacing: 5,
                       children: 
-                      [Icon(Icons.access_time, size: 16, color: Colors.white),Text(DateFormat.jm().format(DateTime.fromMillisecondsSinceEpoch(_currFoodVals[15] * 1000)), style: TextStyle(fontSize: 12, color: Colors.white)),]
+                      [Icon(Icons.access_time, size: 16, color: ColorTheme["textPrimary"]),Text(DateFormat.jm().format(DateTime.fromMillisecondsSinceEpoch(_currFoodVals[15] * 1000)), style: TextStyle(fontSize: 12, color: ColorTheme["textPrimary"])),]
                       ),
                   ),
                 ),
@@ -1620,15 +1622,15 @@ Widget build(BuildContext context) {
         Container(
           child: "calories" == attributeID
               ? DropdownButton<String>(
-                  icon: Icon(Icons.arrow_drop_down, color: Colors.white, size: editingField? 24: 0),
+                  icon: Icon(Icons.arrow_drop_down, color: ColorTheme["textPrimary"], size: editingField? 24: 0),
                   isDense: true,
-                  dropdownColor: Color.fromARGB(255, 38, 131, 112),
+                  dropdownColor: ColorTheme["secondaryBG"],
                   underline: SizedBox.shrink(),
                   value: units,
                   style: TextStyle(
                       fontSize: 12,
                       overflow: TextOverflow.clip,
-                      color: Colors.white),
+                      color: ColorTheme["textPrimary"]),
                   onChanged: (String? newValue) => {
                     _changeUnits(newValue),
                     _textController.text = (amount! *
@@ -1646,15 +1648,15 @@ Widget build(BuildContext context) {
                 )
               : normalizedUnit != "" && "serving_size" == attributeID
                   ? DropdownButton<String>(
-                      icon: Icon(Icons.arrow_drop_down, color: Colors.white, size: editingField? 24: 0),
+                      icon: Icon(Icons.arrow_drop_down, color: ColorTheme["textPrimary"], size: editingField? 24: 0),
                       isDense: true,
-                      dropdownColor: Color.fromARGB(255, 38, 131, 112),
+                      dropdownColor: ColorTheme["secondaryBG"],
                       underline: SizedBox.shrink(),
                       value: normalizedUnit,
                       style: TextStyle(
                           fontSize: 12,
                           overflow: TextOverflow.clip,
-                          color: Colors.white),
+                          color: ColorTheme["textPrimary"]),
                       onChanged: (String? newValue) => _changeUnits(newValue),
                       items: [
                         ...unitNormalization.keys
@@ -1666,13 +1668,13 @@ Widget build(BuildContext context) {
                     )
                   : Text(units!,
                       style: TextStyle(
-                          fontSize: 12, overflow: TextOverflow.clip, color: Colors.white)),
+                          fontSize: 12, overflow: TextOverflow.clip, color: ColorTheme["textPrimary"])),
                           
         ),
         SizedBox(width: 20),
         GestureDetector(
           onTap: attributeID != "meal" && attributeID != "time" ? _resetToDefaultValue : () => attributeID == "meal" ? {setState(() {_currFoodVals[14] = widget.currFood.meal;})} : {setState(() {_currFoodVals[15] = DateTime.now().toUtc().difference(DateTime.utc(1970, 1, 1)).inSeconds;})},
-          child: Icon(Icons.undo, color: attributeID == "meal" || attributeID == "time" || editingField ? Colors.white : Colors.transparent, size: 24),
+          child: Icon(Icons.undo, color: attributeID == "meal" || attributeID == "time" || editingField ? ColorTheme["textPrimary"] : Color.fromARGB(0,0,0,0), size: 24),
         ),
       ]),
       attributeID == "density" && editingField ? 
@@ -1681,12 +1683,12 @@ Widget build(BuildContext context) {
         child: Row(
           children: [
             Expanded(child:SizedBox.shrink()),
-            Text("Preset: ", style: TextStyle(fontSize: 12, color: const Color.fromARGB(175, 255, 255, 255))),
+            Text("Preset: ", style: TextStyle(fontSize: 12, color: ColorTheme["textPrimary"]!.withAlpha(175))),
             SizedBox(width: 10),
             DropdownButton<String>(
-                    icon: Icon(Icons.arrow_drop_down, color: const Color.fromARGB(255, 255, 255, 255)),
+                    icon: Icon(Icons.arrow_drop_down, color: ColorTheme["textPrimary"]),
                     isDense: true,
-                    dropdownColor: Color.fromARGB(255, 29, 96, 94),
+                    dropdownColor: ColorTheme["secondaryBG"],
                     value: densityPresets.keys.firstWhere((element) => densityPresets[element] == _currFoodVals[8], orElse: () => "Choose Preset"),
                     style: TextStyle(
                         fontSize: 12,
@@ -1707,7 +1709,7 @@ Widget build(BuildContext context) {
                     items: (["Choose Preset"] + densityPresets.keys.toList())
                         .map((str) => DropdownMenuItem<String>(
                               value: str,
-                              child: Text(str, textAlign: TextAlign.end, style: TextStyle(color: str == "Choose Preset" ? Color.fromARGB(175, 255, 255, 255) : Colors.white)),
+                              child: Text(str, textAlign: TextAlign.end, style: TextStyle(color: str == "Choose Preset" ? ColorTheme["textPrimary"]!.withAlpha(175) : ColorTheme["textPrimary"])),
                             ))
                         .toList(),
                   )
@@ -1718,10 +1720,10 @@ Widget build(BuildContext context) {
       attributeID != "meal"  && attributeID != "time" && editingField? SliderTheme(
         data: SliderTheme.of(context).copyWith(
           // Optional: Customize slider appearance
-          activeTrackColor: Colors.blueAccent.shade100,
-          inactiveTrackColor: Colors.grey.shade800,
-          thumbColor: Colors.blueAccent,
-          overlayColor: Colors.blueAccent.withAlpha(0x29), // Splash color
+          activeTrackColor: ColorTheme["primaryLight"],
+          inactiveTrackColor: ColorTheme["grey"],
+          thumbColor: ColorTheme["primary"],
+          overlayColor: ColorTheme["primary"]!.withAlpha(0x29), // Splash color
           thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7.0),
           overlayShape: const RoundSliderOverlayShape(overlayRadius: 12.0),
           trackHeight: 2.0,
@@ -1808,7 +1810,7 @@ Widget build(BuildContext context) {
                       });
                     },
                     child: Text("Scale other attributes",
-                        style: TextStyle(fontSize: 12, color: Colors.white),
+                        style: TextStyle(fontSize: 12, color: ColorTheme["textPrimary"]),
                         overflow: TextOverflow.ellipsis)),
               ],
             )
@@ -1823,9 +1825,9 @@ Widget build(BuildContext context) {
     
     decoration: BoxDecoration(
       border: Border(
-        top: BorderSide(color: const Color.fromARGB(50, 255, 255, 255)),
+        top: BorderSide(color: ColorTheme["textPrimary"]!.withAlpha(50)),
       ),
-      color: ["calories","carbs", "fats", "protein", "sugar"].contains(attributeID) ? Color.fromARGB(83, 0, 0, 0) : Colors.transparent,
+      color: ["calories","carbs", "fats", "protein", "sugar"].contains(attributeID) ? ColorTheme["primaryBGDark"] : Color.fromARGB(0,0,0,0),
     ),
     child: currEditing ? 
       GestureDetector(onTap: () {
@@ -1838,7 +1840,7 @@ Widget build(BuildContext context) {
           focusNode: _allFocusNode,
           child: Container(
             padding: EdgeInsets.all(10),
-            color: Colors.transparent,
+            color: Color.fromARGB(0,0,0,0),
             child: attributeDisplayEdit)
         )
     )
@@ -1917,20 +1919,20 @@ Widget _buildAxis(double scaleMax) {
     children: [
       Container(
         height: 1,
-        color: Colors.grey.shade500,
+        color: ColorTheme["lightGrey"],
       ),
       Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Flexible(child: Text('0%', style: TextStyle(fontSize: 10, color: Colors.white, overflow: TextOverflow.clip))),
+          Flexible(child: Text('0%', style: TextStyle(fontSize: 10, color: ColorTheme["textPrimary"], overflow: TextOverflow.clip))),
           if (scaleMax >= 50)
             Flexible(
               child: Text('${(scaleMax * 0.5).toStringAsFixed(0)}%',
-                  style: TextStyle(fontSize: 10, color: Colors.white, overflow: TextOverflow.clip)),
+                  style: TextStyle(fontSize: 10, color: ColorTheme["textPrimary"], overflow: TextOverflow.clip)),
             ),
           Flexible(
             child: Text('${scaleMax.toStringAsFixed(0)}%',
-                style: TextStyle(fontSize: 10, color: Colors.white, overflow: TextOverflow.clip)),
+                style: TextStyle(fontSize: 10, color: ColorTheme["textPrimary"], overflow: TextOverflow.clip)),
           ),
         ],
       ),
@@ -1981,7 +1983,7 @@ Widget build(BuildContext context) {
   return Container(
     decoration: BoxDecoration(
       border: Border(
-        top: BorderSide(color: const Color.fromARGB(50, 255, 255, 255)),
+        top: BorderSide(color: ColorTheme["textPrimary"]!.withAlpha(50)),
       ),
     ),
     child: Padding(
@@ -2015,7 +2017,7 @@ Widget build(BuildContext context) {
                             child: Text(
                               '${data['label']} (${data['value'].toStringAsFixed(0)}${data['unit']})',
                               style: TextStyle(
-                                  fontSize: 8, color: Colors.white),
+                                  fontSize: 8, color: ColorTheme["textPrimary"]),
                             ),
                           ),
                         ],
@@ -2037,7 +2039,7 @@ Widget build(BuildContext context) {
                               Container(
                                 height: 22,
                                 decoration: BoxDecoration(
-                                  color: Colors.grey.shade700,
+                                  color: ColorTheme["darkGrey"],
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                               ),
@@ -2054,7 +2056,7 @@ Widget build(BuildContext context) {
                                 child: Text(
                                   valueText,
                                   style: TextStyle(
-                                    color: Colors.white,
+                                    color: ColorTheme["textPrimary"],
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -2083,13 +2085,13 @@ Widget build(BuildContext context) {
           SizedBox(height: 8),
           Text(
             "Percent of ${widget.dailyValues[0]}",
-            style: TextStyle(fontSize: 12, color: Colors.white),
+            style: TextStyle(fontSize: 12, color: ColorTheme["textPrimary"]),
           ),
           SizedBox(height: 4),
           Text(
             detailsString,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 10, color: Colors.grey.shade400),
+            style: TextStyle(fontSize: 10, color: ColorTheme["lightGrey"]),
           ),
         ],
       ),

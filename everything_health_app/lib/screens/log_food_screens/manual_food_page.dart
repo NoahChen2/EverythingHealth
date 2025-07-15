@@ -1,3 +1,5 @@
+import 'package:everything_health_app/services/color_services.dart';
+
 import '../log_food_page.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -20,8 +22,8 @@ class ManualFoodPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(top: 60),
-      color: const Color.fromARGB(255, 0, 36, 72),
+      margin: EdgeInsets.only(top: 90),
+      color: ColorTheme["primaryBG"],
       child: Align(
         alignment: Alignment.topCenter,
         child: GestureDetector(
@@ -46,7 +48,8 @@ class ManualFoodPage extends StatelessWidget {
             width: 500,
             padding: EdgeInsets.all(5),
             decoration: BoxDecoration(
-              border: Border.all(color: Color.fromARGB(255, 65, 224, 192)),
+              color: ColorTheme["primaryBGAlt"]!,
+              border: Border.all(color: ColorTheme["secondary"]!.withAlpha(50), width: 2),
               borderRadius: BorderRadius.all(Radius.circular(20)),
             ),
             child: 
@@ -55,9 +58,9 @@ class ManualFoodPage extends StatelessWidget {
                 children: [
                   Flexible(
                     fit: FlexFit.loose,
-                    child: Text("Create New Food", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.white), overflow: TextOverflow.clip)),
+                    child: Text("Create New Food", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: ColorTheme["textPrimary"]), overflow: TextOverflow.clip)),
                   SizedBox(width: 20),
-                  Icon(Icons.add, color: Colors.white),
+                  Icon(Icons.add, color: ColorTheme["textPrimary"]),
                 ])
           ),
         ),

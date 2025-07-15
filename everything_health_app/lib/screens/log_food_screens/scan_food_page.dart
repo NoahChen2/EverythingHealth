@@ -6,6 +6,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:everything_health_app/services/color_services.dart';
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
@@ -20,6 +21,7 @@ import 'package:isar/isar.dart';
 import 'package:everything_health_app/models/saved_foods.dart';
 import 'package:everything_health_app/models/history_foods.dart';
 import '../../services/nutrition_services.dart';
+
 
 class ScanFoodPage extends StatefulWidget {
   final Function addFoodFunc;
@@ -560,9 +562,9 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
       return Stack(
         children: [
           Container(
-              margin: EdgeInsets.only(top: 60),
+              margin: EdgeInsets.only(top: 90),
               width: double.infinity,
-              color: const Color.fromARGB(255, 0, 36, 72),
+              color: ColorTheme["primaryBG"],
               child: Stack(
                 children: [
                   Column(children: [
@@ -586,8 +588,8 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                           width: 500,
                           padding: EdgeInsets.all(5),
                           decoration: BoxDecoration(
-                            border:
-                                Border.all(color: Color.fromARGB(255, 65, 224, 192)),
+                            color: ColorTheme["primaryBGAlt"]!,
+                            border: Border.all(color: ColorTheme["secondary"]!.withAlpha(50), width: 2),
                             borderRadius: BorderRadius.all(Radius.circular(20)),
                           ),
                           child: Row(
@@ -599,10 +601,10 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                                         style: TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.w500,
-                                            color: Colors.white),
+                                            color: ColorTheme["textPrimary"]),
                                         overflow: TextOverflow.clip)),
                                 SizedBox(width: 20),
-                                Icon(Icons.barcode_reader, color: Colors.white),
+                                Icon(Icons.barcode_reader, color: ColorTheme["textPrimary"]),
                               ])),
                     ),
                     GestureDetector(
@@ -617,8 +619,8 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                           width: 500,
                           padding: EdgeInsets.all(5),
                           decoration: BoxDecoration(
-                            border:
-                                Border.all(color: Color.fromARGB(255, 65, 224, 192)),
+                            color: ColorTheme["primaryBGAlt"]!,
+                            border: Border.all(color: ColorTheme["secondary"]!.withAlpha(50), width: 2),
                             borderRadius: BorderRadius.all(Radius.circular(20)),
                           ),
                           child: Row(
@@ -630,10 +632,10 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                                         style: TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.w500,
-                                            color: Colors.white),
+                                            color: ColorTheme["textPrimary"]),
                                         overflow: TextOverflow.clip)),
                                 SizedBox(width: 20),
-                                Icon(Icons.camera_alt, color: Colors.white),
+                                Icon(Icons.camera_alt, color: ColorTheme["textPrimary"]),
                               ])),
                     ),
                   ]),
@@ -652,31 +654,31 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                         },
                         child: Container(
                           decoration:
-                              BoxDecoration(color: const Color.fromARGB(150, 0, 0, 0)),
+                              BoxDecoration(color: ColorTheme["darkenMain"]),
                         )),
                       Center(
                           child: Container(
                               height: pageHeight * .7,
                               width: pageWidth * .9,
                               decoration: BoxDecoration(
-                                color: Color.fromARGB(255, 0, 36, 72),
+                                color: ColorTheme["primaryBG"],
                                 borderRadius: BorderRadius.circular(pageWidth * .05)),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                 children: [
                                   _isLoading && foundFoodStatus != "Analyzing Image..."  && foundFoodStatus != "Searching Barcode..."? 
                                   Text(_loadError, style: const TextStyle(color: Colors.redAccent, fontSize: 16), textAlign: TextAlign.center,): 
-                                  Text(foundFoodStatus, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600), textAlign: TextAlign.center, overflow: TextOverflow.clip,),
+                                  Text(foundFoodStatus, style:  TextStyle(color: ColorTheme["textPrimary"], fontSize: 24, fontWeight: FontWeight.w600), textAlign: TextAlign.center, overflow: TextOverflow.clip,),
                                   food != null ? 
                                   (!food!.name.startsWith("​New Food") || ["Food Scanned Successfully", "Unable to Scan Food"].contains(foundFoodStatus)) && foundFoodStatus != "Analyzing Image..." && foundFoodStatus != "Searching Barcode..."? 
                                     Container(
                                       width: 300,
                                       height: 300,
                                       decoration: BoxDecoration(
-                                        border: Border.all(color: const Color.fromARGB(255, 65, 224, 192)),
+                                        border: Border.all(color: ColorTheme["secondary"]!.withAlpha(50), width: 2),
                                         borderRadius: const BorderRadius.all(Radius.circular(10)),
                                         color:
-                                            const Color.fromARGB(255, 0, 23, 47), // A fallback background color
+                                            ColorTheme["primaryBGAlt"], // A fallback background color
                                       ),
                                       // ClipRRect ensures all children (like the image area) respect the rounded corners.
                                       child: ClipRRect(
@@ -719,13 +721,10 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                                                                   minFontSize: 1,
                                                                   maxFontSize: 50,
                                                                   textAlign: TextAlign.right,
-                                                                  style: const TextStyle(
+                                                                  style: TextStyle(
                                                                     fontWeight: FontWeight.w600,
-                                                                    color: Colors.white,
+                                                                    color: ColorTheme["textPrimary"],
                                                                     fontSize: 24, // The starting font size
-                                                                    shadows: [
-                                                                      Shadow(color: Colors.black, blurRadius: 2.0)
-                                                                    ],
                                                                   ),
                                                                 ),
                                                               ),
@@ -737,13 +736,10 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                                                                   minFontSize: 1,
                                                                   maxFontSize: 50,
                                                                   textAlign: TextAlign.right,
-                                                                  style: const TextStyle(
+                                                                  style: TextStyle(
                                                                     fontWeight: FontWeight.w600,
-                                                                    color: Colors.white,
+                                                                    color: ColorTheme["textPrimary"],
                                                                     fontSize: 24,
-                                                                    shadows: [
-                                                                      Shadow(color: Colors.black, blurRadius: 2.0)
-                                                                    ],
                                                                   ),
                                                                 ),
                                                               ),
@@ -761,32 +757,42 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                                                 flex: 5, // Give this section 40% of the height
                                                 child: Container(
                                                   width: double.infinity,
-                                                  color: const Color.fromARGB(141, 0, 0, 0),
+                                                  color: ColorTheme["primaryBGAlt"],
                                                   // Center the text vertically and horizontally
                                                   child: Center(
                                                     child: Padding(
                                                       padding: const EdgeInsets.symmetric(horizontal: 4.0),
                                                       // Using AutoSizeText for the name. It works here because its parent
                                                       // Expanded gives it a clear, fixed area to fill.
-                                                      child: AutoSizeText(
-                                                        food!.name,
+                                                      child: AutoSizeText.rich(
+                                                        TextSpan(
+                                                          children: <TextSpan>[
+                                                            TextSpan(
+                                                              text: food!.servings != 1 ? "(${(food!.servings).toStringAsPrecision(2)}) " : "",
+                                                              style: TextStyle(color: ColorTheme["textPrimary"]!.withAlpha(179)),
+                                                            ),
+                                                            TextSpan(
+                                                              text: food!.name,
+                                                              style: TextStyle(color: ColorTheme["textPrimary"]),
+                                                            ),
+                                                        ],),
                                                         minFontSize: 1,
                                                         maxFontSize: 40,
                                                         maxLines: 2,
                                                         textAlign: TextAlign.center,
-                                                        style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600,),
+                                                        style: TextStyle(color: ColorTheme["textPrimary"], fontSize: 24, fontWeight: FontWeight.w600,),
                                                       ),
                                                     ),
                                                   ),
                                                 ),
                                               ),
-                                              Divider(color: const Color.fromARGB(38, 255, 255, 255), height: 1),
-                                              Container(height: 5, color: const Color.fromARGB(141, 0, 0, 0),),
+                                              Divider(color: ColorTheme["textSecondary"]!.withAlpha(38), height: 1),
+                                              Container(height: 5, color: ColorTheme["primaryBGAlt"],),
                                               Expanded(
                                                 flex: 4,
                                                 child: Container(
                                                     width: double.infinity,
-                                                    color: const Color.fromARGB(141, 0, 0, 0),
+                                                    color: ColorTheme["primaryBGAlt"],
                                                     child: Row(
                                                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -794,7 +800,7 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                                                         Expanded(
                                                           child: GestureDetector(
                                                               onTap: () => widget.addFoodToHistory(food!),
-                                                              child: Icon(Icons.add, color: Colors.white, size: 40)),
+                                                              child: Icon(Icons.add, color: ColorTheme["textPrimary"], size: 40)),
                                                         ),
                                                         Expanded(
                                                           child: GestureDetector(
@@ -806,7 +812,7 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                                                                   food!.isSaved
                                                                       ? Icons.bookmark
                                                                       : Icons.bookmark_outline,
-                                                                  color: Colors.white, size: 40)),
+                                                                  color: ColorTheme["textPrimary"], size: 40)),
                                                         )
                                                       ],
                                                     )),
@@ -827,7 +833,7 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                                           width: 300,
                                           padding: EdgeInsets.all(5),
                                           decoration: BoxDecoration(
-                                            border: Border.all(color: Color.fromARGB(255, 65, 224, 192)),
+                                            border: Border.all(color: ColorTheme["secondary"]!.withAlpha(50), width: 2),
                                             borderRadius: BorderRadius.all(Radius.circular(20)),
                                           ),
                                           child: 
@@ -836,9 +842,9 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                                               children: [
                                                 Flexible(
                                                   fit: FlexFit.loose,
-                                                  child: Text("Create New Food", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.white), overflow: TextOverflow.clip)),
+                                                  child: Text("Create New Food", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: ColorTheme["textPrimary"]), overflow: TextOverflow.clip)),
                                                 SizedBox(width: 20),
-                                                Icon(Icons.add, color: Colors.white),
+                                                Icon(Icons.add, color: ColorTheme["textPrimary"]),
                                               ])
                                         ),
                                       ) : SizedBox.shrink()
@@ -853,7 +859,8 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                                               width: pageWidth * .75,
                                               padding: EdgeInsets.all(5),
                                               decoration: BoxDecoration(
-                                                border: Border.all(color: Color.fromARGB(255, 65, 224, 192)),
+                                                color: ColorTheme["primaryBGAlt"]!,
+                                                border: Border.all(color: ColorTheme["secondary"]!.withAlpha(50), width: 2),
                                                 borderRadius: BorderRadius.all(Radius.circular(20)),
                                               ),
                                               child: 
@@ -862,9 +869,9 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                                                   children: [
                                                     Flexible(
                                                       fit: FlexFit.loose,
-                                                      child: Text("Search Web Database Instead", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.white), overflow: TextOverflow.clip)),
+                                                      child: Text("Search Web Database Instead", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: ColorTheme["textPrimary"]), overflow: TextOverflow.clip)),
                                                     SizedBox(width: 20),
-                                                    Icon(Icons.add, color: Colors.white),
+                                                    Icon(Icons.add, color: ColorTheme["textPrimary"]),
                                                   ])
                                             ),
                                           ),
@@ -886,11 +893,11 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                             height: 50,
                             width: 50,
                             decoration: BoxDecoration(
-                                color: Color.fromARGB(255, 0, 88, 175),
+                                color: ColorTheme["primary"],
                                 borderRadius: BorderRadius.circular(30)),
                             child: Icon(
                               Icons.close,
-                              color: Colors.white,
+                              color: ColorTheme["textPrimary"],
                             ),
                           ),
                         ))
@@ -901,9 +908,9 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
     } else if (elementState == 1) {
       return Scaffold(
         key: UniqueKey(),
-        backgroundColor: const Color.fromARGB(255, 0, 36, 72),
+        backgroundColor: ColorTheme["primaryBG"],
         body: Container(
-          margin: EdgeInsets.only(top: 60),
+          margin: EdgeInsets.only(top: 90),
           child: LayoutBuilder(
             builder: (context, constraints) {
               double pageWidth = constraints.maxWidth;
@@ -912,7 +919,7 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
               return Stack(
                 children: [
                   Center(
-                    child: Text("Camera Loading...\n\n\n", style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w500), textAlign: TextAlign.center, overflow: TextOverflow.clip),
+                    child: Text("Camera Loading...\n\n\n", style: TextStyle(color: ColorTheme["textPrimary"], fontSize: 24, fontWeight: FontWeight.w500), textAlign: TextAlign.center, overflow: TextOverflow.clip),
                   ),
                   Center(
                     child: SizedBox(
@@ -937,12 +944,12 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                     ),
                   ),
                   Center(
-                    child: Icon(Icons.link, color: Colors.white, size: 50)
+                    child: Icon(Icons.link, color: ColorTheme["textPrimary"], size: 50)
                   ),
                   Container(
                     padding: EdgeInsets.all(8.0),
                     alignment: Alignment.topCenter,
-                    child: Text("Scan Barcode", style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600), textAlign: TextAlign.center, overflow: TextOverflow.clip),
+                    child: Text("Scan Barcode", style: TextStyle(color: ColorTheme["textPrimary"], fontSize: 24, fontWeight: FontWeight.w600), textAlign: TextAlign.center, overflow: TextOverflow.clip),
                   ),
                   Positioned(
                       top: 5,
@@ -953,10 +960,10 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                               height: 50,
                               width: 50,
                               decoration: BoxDecoration(
-                                  color: Color.fromARGB(155, 0, 0, 0),
+                                  color: ColorTheme["darkenMain"],
                                   borderRadius: BorderRadius.circular(20)),
                               child: Icon(Icons.arrow_back_ios,
-                                  color: Colors.white)))),
+                                  color: ColorTheme["textPrimary"])))),
                 ],
               );
             },
@@ -965,19 +972,19 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
       );
     }  else if (elementState == 3) { // <-- ADD THIS BLOCK
       // This is a temporary loading view to force a full widget tree rebuild.
-      return const Scaffold(
-        backgroundColor: Color.fromARGB(255, 0, 36, 72),
+      return Scaffold(
+        backgroundColor: ColorTheme["primaryBG"],
         body: Center(
-          child: CircularProgressIndicator(color: Colors.white),
+          child: CircularProgressIndicator(color: ColorTheme["textPrimary"]),
         ),
       );
     }else {
       return Scaffold(
         backgroundColor:
         _capturedImage == null ?
-            const Color.fromARGB(255, 0, 36, 72) : const Color.fromARGB(255, 0, 17, 35), // Match your color
+            ColorTheme["primaryBG"] : ColorTheme["primaryBGDark"], // Match your color
         body: Container(
-          margin: EdgeInsets.only(top: 60),
+          margin: EdgeInsets.only(top: 90),
           child: _controller == null || _initializeControllerFuture == null
               ? Stack(children: [
                   Center(child: CircularProgressIndicator()),
@@ -992,10 +999,10 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                               height: 50,
                               width: 50,
                               decoration: BoxDecoration(
-                                  color: Color.fromARGB(155, 0, 0, 0),
+                                  color: ColorTheme["darkenMain"],
                                   borderRadius: BorderRadius.circular(20)),
                               child: Icon(Icons.arrow_back_ios,
-                                  color: Colors.white)))),
+                                  color: ColorTheme["textPrimary"])))),
                 ])
               : 
               FutureBuilder<void>(
@@ -1039,12 +1046,12 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                                     ),
                                   ),
                                   Center(
-                                    child: Icon(Icons.square_outlined, color: Colors.white, size: cropSize * .8)
+                                    child: Icon(Icons.square_outlined, color: ColorTheme["textPrimary"], size: cropSize * .8)
                                   ),
                                   Container(
                                     padding: EdgeInsets.all(8.0),
                                     alignment: Alignment.topCenter,
-                                    child: Text("Analyze Food Picture", style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600), textAlign: TextAlign.center, overflow: TextOverflow.clip),
+                                    child: Text("Analyze Food Picture", style: TextStyle(color: ColorTheme["textPrimary"], fontSize: 24, fontWeight: FontWeight.w600), textAlign: TextAlign.center, overflow: TextOverflow.clip),
                                   ),
                                   Align(
                                     alignment: Alignment.bottomCenter,
@@ -1054,15 +1061,15 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                                         height: 100,
                                         width: 200,
                                         decoration: BoxDecoration(
-                                            color: const Color.fromARGB(255, 47, 87, 79),
-                                            border: Border.all(color: const Color.fromARGB(156, 255, 255, 255), width: 2),
+                                            color: ColorTheme["secondaryBG"],
+                                            border: Border.all(color: ColorTheme["textPrimary"]!.withAlpha(156), width: 2),
                                             borderRadius:
                                             BorderRadius.all(Radius.circular(20)),
                                             
                                         ),
                                         margin: EdgeInsets.only(bottom: 40),
                                         child: Center(
-                                          child: Icon(Icons.camera_alt, color: Colors.white, size: 50,),
+                                          child: Icon(Icons.camera_alt, color: ColorTheme["textPrimary"], size: 50,),
                                           
                                         ),
                                       ),
@@ -1090,11 +1097,11 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                                               height: 50,
                                               width: 50,
                                               decoration: BoxDecoration(
-                                                  color: Color.fromARGB(155, 0, 0, 0),
+                                                  color: ColorTheme["darkenMain"],
                                                   borderRadius:
                                                       BorderRadius.circular(20)),
                                               child: Icon(Icons.arrow_back_ios,
-                                                  color: Colors.white)))),
+                                                  color: ColorTheme["textPrimary"])))),
                           
                                 ],
                               );
@@ -1106,7 +1113,7 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                               Container(
                                 padding: EdgeInsets.all(8.0),
                                 alignment: Alignment.topCenter,
-                                  child: Text("Captured Food Image", style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600), textAlign: TextAlign.center, overflow: TextOverflow.clip),
+                                  child: Text("Captured Food Image", style: TextStyle(color: ColorTheme["textPrimary"], fontSize: 24, fontWeight: FontWeight.w600), textAlign: TextAlign.center, overflow: TextOverflow.clip),
                               ),
                               Expanded(
                                 // Show the captured image
@@ -1114,7 +1121,7 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                               ),
                               // Show the confirmation buttons
                               Container(
-                                color: const Color.fromARGB(255, 0, 17, 35),
+                                color: ColorTheme["primaryBGDark"],
                                 padding: const EdgeInsets.symmetric(vertical: 50),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -1123,8 +1130,8 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                                     ElevatedButton(
                                       onPressed: _onRetakePressed,
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color.fromARGB(255, 132, 79, 97),
-                                        foregroundColor: Colors.white,
+                                        backgroundColor: ColorTheme["tertiaryBG"],
+                                        foregroundColor: ColorTheme["textPrimary"],
                                         minimumSize: Size(150, 75)
                                       ),
                                       child: const Text('Retake'),
@@ -1133,8 +1140,8 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                                     ElevatedButton(
                                       onPressed: _onUsePhotoPressed,
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color.fromARGB(255, 47, 87, 79),
-                                        foregroundColor: Colors.white,
+                                        backgroundColor: ColorTheme["secondaryBG"],
+                                        foregroundColor: ColorTheme["textPrimary"],
                                         minimumSize: Size(150, 75)
                                       ),
                                       child: const Text('Use Photo'),
@@ -1146,9 +1153,9 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                           ),
                         if (_isCapturing)
                           Container(
-                            color: const Color.fromARGB(127, 0, 0, 0),
-                            child: const Center(
-                              child: CircularProgressIndicator(color: Colors.white),
+                            color: ColorTheme["darkenMain"],
+                            child: Center(
+                              child: CircularProgressIndicator(color: ColorTheme["textPrimary"]),
                             ),
                           ),
                       ],
