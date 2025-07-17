@@ -24,87 +24,86 @@ class MyBottomNavigationBar extends StatelessWidget {
     Color nonSelectedColor = ColorTheme["coloredGrey"]!;
     Color selectedColor = ColorTheme["textPrimary"]!;
 
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: Material(
-        color: Colors.transparent, // Use transparent for Material
-        child: SizedBox(
-          width: double.infinity,
-          height: barHeight * 1.5,
-          child: LayoutBuilder(builder: (context, constraints) {
-            double circleDiameter = constraints.maxWidth / 5;
-            return Stack(
-              children: [
-                Transform.translate(
-                  offset: Offset(0, barHeight * .5),
-                  child: Container(
-                    height: barHeight,
-                    color: barColor,
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: <Widget>[
-                        buildNavItem( // Use the imported builder
-                          icon: Icons.home,
-                          label: "Dashboard",
-                          colorUsed: currentIndex == 0 ? selectedColor : nonSelectedColor,
-                          onTap: () => onNavigatorSelection(0),
-                        ),
-                        buildNavItem(
-                          icon: Icons.calendar_month,
-                          label: "Calendar",
-                          colorUsed: currentIndex == 1 ? selectedColor : nonSelectedColor,
-                          onTap: () => onNavigatorSelection(1),
-                        ),
-                        const Expanded(flex: 1, child: SizedBox()),
-                        buildNavItem(
-                          icon: Icons.playlist_play_rounded,
-                          label: "Plan",
-                          colorUsed: currentIndex == 2 ? selectedColor : nonSelectedColor,
-                          onTap: () => onNavigatorSelection(2),
-                        ),
-                        buildNavItem(
-                          icon: Icons.settings,
-                          label: "Settings",
-                          colorUsed: currentIndex == 3 ? selectedColor : nonSelectedColor,
-                          onTap: () => onNavigatorSelection(3),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Align(
-                  alignment: Alignment.center,
-                  child: SizedBox(
-                    height: circleDiameter,
-                    width: circleDiameter,
-                    child: InkWell(
-                      onTap: addButtonSelector,
-                      hoverColor: Colors.transparent,
-                      splashColor: Colors.transparent,
-                      highlightColor: Colors.transparent,
-                      child: Stack(
-                        children: [
-                          Icon(
-                            Icons.circle,
-                            color: plusColor,
-                            size: circleDiameter,
+    return Material(
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: Container(
+          color: Colors.transparent, // Use transparent for Material
+          child: SizedBox(
+            width: double.infinity,
+            height: barHeight * 1.5,
+            child: LayoutBuilder(builder: (context, constraints) {
+              double circleDiameter = constraints.maxWidth / 5;
+              return Stack(
+                children: [
+                  Transform.translate(
+                    offset: Offset(0, barHeight * .5),
+                    child: Container(
+                      height: barHeight,
+                      color: barColor,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          buildNavItem( // Use the imported builder
+                            icon: Icons.home,
+                            label: "Dashboard",
+                            colorUsed: currentIndex == 0 ? selectedColor : nonSelectedColor,
+                            onTap: () => onNavigatorSelection(0),
                           ),
-                          Align(
-                            alignment: Alignment.center,
-                            child: Icon(
-                              Icons.add,
-                              color: addColor,
-                              size: circleDiameter * 0.75,
-                            ),
-                          )
+                          buildNavItem(
+                            icon: Icons.calendar_month,
+                            label: "Calendar",
+                            colorUsed: currentIndex == 1 ? selectedColor : nonSelectedColor,
+                            onTap: () => onNavigatorSelection(1),
+                          ),
+                          const Expanded(flex: 1, child: SizedBox()),
+                          buildNavItem(
+                            icon: Icons.playlist_play_rounded,
+                            label: "Plan",
+                            colorUsed: currentIndex == 2 ? selectedColor : nonSelectedColor,
+                            onTap: () => onNavigatorSelection(2),
+                          ),
+                          buildNavItem(
+                            icon: Icons.settings,
+                            label: "Settings",
+                            colorUsed: currentIndex == 3 ? selectedColor : nonSelectedColor,
+                            onTap: () => onNavigatorSelection(3),
+                          ),
                         ],
                       ),
                     ),
                   ),
-                )
-              ],
-            );
-          }),
+                  Align(
+                    alignment: Alignment.center,
+                    child: SizedBox(
+                      height: circleDiameter,
+                      width: circleDiameter,
+                      child: GestureDetector(
+                        onTap: addButtonSelector,
+                        child: Stack(
+                          children: [
+                            Icon(
+                              Icons.circle,
+                              color: plusColor,
+                              size: circleDiameter,
+                            ),
+                            Align(
+                              alignment: Alignment.center,
+                              child: Icon(
+                                Icons.add,
+                                color: addColor,
+                                size: circleDiameter * 0.75,
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              );
+            }),
+          ),
         ),
       ),
     );

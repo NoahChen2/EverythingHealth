@@ -1,4 +1,5 @@
 import 'package:everything_health_app/services/color_services.dart';
+import 'package:everything_health_app/widgets/eh_widgets.dart';
 
 import '../log_food_page.dart';
 import 'package:flutter/material.dart';
@@ -26,7 +27,7 @@ class ManualFoodPage extends StatelessWidget {
       color: ColorTheme["primaryBG"],
       child: Align(
         alignment: Alignment.topCenter,
-        child: GestureDetector(
+        child: EHMenuButton(
           onTap: addFoodFunc(FoodItem(
             name: "​New Food ${DateFormat('yyyy/MM/dd HH:mm').format(DateTime.now())}",
             serving_size: "100 g",
@@ -42,16 +43,6 @@ class ManualFoodPage extends StatelessWidget {
             servings: 1,
             code: -1,
           )),
-          child: Container(
-            margin: EdgeInsets.only(top: 20, left: 10, right: 10),
-            height: 100,
-            width: 500,
-            padding: EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              color: ColorTheme["primaryBGAlt"]!,
-              border: Border.all(color: ColorTheme["secondary"]!.withAlpha(50), width: 2),
-              borderRadius: BorderRadius.all(Radius.circular(20)),
-            ),
             child: 
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -61,8 +52,7 @@ class ManualFoodPage extends StatelessWidget {
                     child: Text("Create New Food", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: ColorTheme["textPrimary"]), overflow: TextOverflow.clip)),
                   SizedBox(width: 20),
                   Icon(Icons.add, color: ColorTheme["textPrimary"]),
-                ])
-          ),
+                ]),
         ),
       )
     );

@@ -1,6 +1,3 @@
-
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 // ignore: non_constant_identifier_names
@@ -26,6 +23,7 @@ class ColorServices {
     "veryLightGrey": const Color.fromARGB(255, 224, 224, 224),
     "lightGrey": const Color.fromARGB(255, 158, 158, 158),
     "darkGrey": const Color.fromARGB(255, 66, 66, 66),
+    "transparent": const Color.fromARGB(0,0,0,0),
   };
 
   static final Map<String, Color> lightColors = {
@@ -47,8 +45,37 @@ class ColorServices {
     "veryLightGrey": const Color.fromARGB(255, 224, 224, 224),
     "lightGrey": const Color.fromARGB(255, 158, 158, 158),
     "darkGrey": const Color.fromARGB(255, 66, 66, 66),
+    "transparent": const Color.fromARGB(0,0,0,0),
   };
+  
+  static ColorScheme createColorSchemeFromMap(Map<String, Color> colorMap) {
+    // Determine brightness based on the background color's luminance
+    final Brightness brightness =
+        (colorMap["primaryBG"] ?? Colors.white).computeLuminance() < 0.5
+            ? Brightness.dark
+            : Brightness.light;
 
+    return ColorScheme(
+      brightness: brightness,
+
+      // Map your custom keys to the standard ColorScheme properties
+      primary: colorMap["primary"] ?? Colors.blue,
+      onPrimary: colorMap["textPrimary"] ?? Colors.white,
+
+      secondary: colorMap["secondary"] ?? Colors.teal,
+      onSecondary: colorMap["textSecondary"] ?? Colors.black,
+
+      tertiary: colorMap["tertiary"] ?? Colors.pink,
+      onTertiary: colorMap["textSecondary"] ?? Colors.black,
+
+      surface: colorMap["primaryBGAlt"] ?? Colors.grey[700]!,
+      onSurface: colorMap["textPrimary"] ?? Colors.white,
+
+      // Provide sensible defaults for colors not in your map
+      error: Colors.red[700]!,
+      onError: Colors.white,
+    );
+  }
   static Map<String, Color> colorTheme(){
     return darkColors;
   }

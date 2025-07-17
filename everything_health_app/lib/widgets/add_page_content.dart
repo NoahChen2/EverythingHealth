@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:everything_health_app/services/color_services.dart';
+import 'package:everything_health_app/widgets/eh_widgets.dart';
 import 'package:flutter/material.dart';
 
 // Moved _menuOptionRectangle here (can be kept private if only used by AddPage)
@@ -12,19 +13,14 @@ Widget _menuOptionRectangle({
   required double width,
   required VoidCallback onTap,
 }) {
-  return Container(
-      height: height,
-      width: width,
-      padding: EdgeInsets.all(height * .05), // Relative margin
-
-      child: Container(
-        decoration: BoxDecoration(
-          color: ColorTheme["primaryBGAlt"]!,
-          borderRadius: BorderRadius.circular(height * .08), // Relative radius
-          border: Border.all(color: ColorTheme["secondary"]!.withAlpha(50), width: 2),
-        ),
-        child: Stack(children: [
-          Center(
+  return EHMenuButton(
+    onTap: onTap,
+    height: height * .95,
+    width: width * .95,
+    margin: EdgeInsets.only(left: height * .05,right: height * .05, bottom: height * .2, top: height * .1),
+    paddingValue: 0,
+    borderRadiusValue: height * .08,
+    child: Center(
               child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -40,18 +36,8 @@ Widget _menuOptionRectangle({
                       decoration: TextDecoration.none,
                     )),
               ])),
-          Material(
-              color: Colors.transparent,
-              child: InkWell(
-                highlightColor: ColorTheme["darkenMain"], // Corrected
-                hoverColor: Colors.transparent,
-                focusColor: Colors.transparent,
-                splashColor: Colors.transparent,
-                borderRadius: BorderRadius.circular(height * .08),
-                onTap: onTap,
-              )),
-        ]),
-      ));
+  );
+
 }
 
 class AddPage extends StatelessWidget {

@@ -1,5 +1,6 @@
 import 'dart:io' show File, FileSystemEntity;
 
+import 'package:everything_health_app/services/color_services.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -94,10 +95,12 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
       child: MaterialApp(
+        
         title: 'Everything Health',
         theme: ThemeData(
           useMaterial3: true,
           fontFamily: 'Inter',
+          colorScheme: ColorServices.createColorSchemeFromMap(ColorServices.colorTheme()),
         ),
         home: const MyHomePage(), // Made MyHomePage const
       ),

@@ -1,41 +1,54 @@
 import 'package:flutter/material.dart';
 
-
 // Helper widget to build individual navigation items
-Widget buildNavItem({ // Renamed from _buildNavItem and made public
+Widget buildNavItem({
   required IconData icon,
   required String label,
   required VoidCallback onTap,
   required Color colorUsed,
 }) {
-  return Expanded(
-    flex: 1,
-    child: InkWell(
-      splashColor: Colors.transparent,
-      highlightColor: Colors.transparent,
-      hoverColor: Colors.transparent,
-      focusColor: Colors.transparent,
-      onTap: onTap,
-      child: Container(
-        alignment: Alignment.bottomCenter,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-              vertical: 8.0, horizontal: 0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Icon(icon, color: colorUsed, size: 24),
-              const SizedBox(height: 4),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(fontSize: 10, color: colorUsed, overflow: TextOverflow.clip, fontWeight: FontWeight.w700),
+  return 
+     Flexible(
+      fit: FlexFit.tight,
+      flex: 1,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque, // Makes the entire Expanded area tappable
+        // The Column is now the direct child. It receives width constraints
+        // from Expanded and uses its own properties for alignment.
+        child: Column(
+          // This vertically centers the icon and text within the nav bar's height.
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            Flexible(
+              flex: 4,
+              child: const SizedBox(height: 8)
+            ),
+            Flexible(
+              flex: 12,
+              child: Icon(icon, color: colorUsed, size: 24)
+            ),
+            Flexible(
+              flex: 2,
+              child: const SizedBox(height: 4)
+            ),
+            Flexible(
+              flex: 5,
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis, // Handles long text gracefully
+                style: TextStyle(
+                  fontSize: 10,
+                  color: colorUsed,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      ),
-    ),
-  );
+         ),
+     );
 }

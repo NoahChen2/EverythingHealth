@@ -6,6 +6,7 @@ import 'package:everything_health_app/main.dart';
 import 'package:everything_health_app/models/history_foods.dart';
 import 'package:everything_health_app/models/saved_foods.dart';
 import 'package:everything_health_app/services/color_services.dart';
+import 'package:everything_health_app/widgets/eh_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 import '../log_food_page.dart';
@@ -238,12 +239,12 @@ class _LibraryFoodPageState extends State<LibraryFoodPage> {
                               100, // Aspect ratio of each card (width / height)
                         ),
                         itemBuilder: (BuildContext context, int index) {
-                          return foodItemCard(
-                              foodList[index],
-                              widget.saveFoodFunc,
-                              widget.addFoodFunc,
-                              widget.addFoodToHistory,
-                              updateFoodList);
+                          return EHFoodItemCard(
+                              food: foodList[index],
+                              saveFoodFunc: widget.saveFoodFunc,
+                              addFoodFunc: widget.addFoodFunc,
+                              addFoodToHistory: widget.addFoodToHistory,
+                              afterSaveFunc: updateFoodList);
                         },
                       ),
                     ),
@@ -403,162 +404,6 @@ class _LibraryFoodPageState extends State<LibraryFoodPage> {
     );
   }
 }
-
-Widget foodItemCard(FoodItem food, Function saveFoodFunc, Function addFoodFunc,
-    Function addFoodToHistory, Function updateFoodList) {
-  // The root container defines the border and rounded corners for the whole card.
-  return Container(
-    width: 100,
-    decoration: BoxDecoration(
-      border: Border.all(color: ColorTheme["secondary"]!.withAlpha(50), width: 2),
-      borderRadius: const BorderRadius.all(Radius.circular(10)),
-      color:
-          ColorTheme["primaryBGAlt"], // A fallback background color
-    ),
-    // ClipRRect ensures all children (like the image area) respect the rounded corners.
-    child: ClipRRect(
-      borderRadius: const BorderRadius.all(Radius.circular(10)),
-      child: GestureDetector(
-        onTap: addFoodFunc(food),
-        child: Column(
-          // The main layout is a Column with two Expanded sections.
-          // This gives each section a clearly defined, fixed height.
-          children: [
-            // The top section of the card (image, stats)
-            Expanded(
-              flex: 10, // Give this section 60% of the height
-              child: Container(
-                width: double.infinity,
-                height: 40,
-                color: food.color,
-                child: Row(
-                  children: [
-                    // Position the stats at the top right
-                    Expanded(
-                      flex: 6,
-                      child: UniversalImage(path: food.image_small_url, fit: BoxFit.contain)
-                    ),
-                    Expanded(
-                      flex: 4,
-                      child: Container(
-                        height: 40,
-                        padding: EdgeInsets.only(right: 5, top: 5, bottom: 5),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            // Using AutoSizeText for the stats
-                            Expanded(
-                              flex: 1,
-                              child: AutoSizeText(
-                                food.serving_size,
-                                maxLines: 1,
-                                minFontSize: 1,
-                                maxFontSize: 20,
-                                textAlign: TextAlign.right,
-                                style: TextStyle(
-                                  color: ColorTheme["textPrimary"],
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 12, // The starting font size
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 1,
-                              child: AutoSizeText(
-                                "${food.calories.toStringAsFixed(0)} kcal",
-                                maxLines: 1,
-                                minFontSize: 1,
-                                maxFontSize: 20,
-                                textAlign: TextAlign.right,
-                                style: TextStyle(
-                                  color: ColorTheme["textPrimary"]!,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // The bottom section of the card (food name)
-            Expanded(
-              flex: 5, // Give this section 40% of the height
-              child: Container(
-                width: double.infinity,
-                color: ColorTheme["primaryBGAlt"],
-                // Center the text vertically and horizontally
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                    // Using AutoSizeText for the name. It works here because its parent
-                    // Expanded gives it a clear, fixed area to fill.
-                    child: AutoSizeText.rich(
-                      TextSpan(
-                        children: <TextSpan>[
-                          TextSpan(
-                          text: food.servings != 1 ? "(${(food.servings).toStringAsPrecision(2)}) " : "",
-                          style: TextStyle(color: ColorTheme["textPrimary"]!.withAlpha(179)),
-                          ),
-                          TextSpan(
-                          text: food.name,
-                          style: TextStyle(color: ColorTheme["textPrimary"]),
-                          ),
-                        ],
-                      ),
-                      minFontSize: 1,
-                      maxFontSize: 40,
-                      maxLines: 2,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: ColorTheme["textPrimary"], fontSize: 16, fontWeight: FontWeight.w600,),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Divider(color: ColorTheme["textPrimary"]!.withAlpha(38), height: 1),
-            Container(height: 5, color: ColorTheme["primaryBGAlt"],),
-            Expanded(
-              flex: 4,
-              child: Container(
-                  width: double.infinity,
-                  color: ColorTheme["primaryBGAlt"],
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                            onTap: () => addFoodToHistory(food),
-                            child: Icon(Icons.add, color: ColorTheme["textPrimary"], size: 20)),
-                      ),
-                      Expanded(
-                        child: GestureDetector(
-                            onTap: () async {
-                              await saveFoodFunc(food);
-                              updateFoodList();
-                            },
-                            child: Icon(
-                                food.isSaved
-                                    ? Icons.bookmark
-                                    : Icons.bookmark_outline,
-                                color: ColorTheme["textPrimary"], size: 20)),
-                      )
-                    ],
-                  )),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
 
 class OptionsSelectMenu extends StatefulWidget {
   final Function(String, int) handleOptionButton;
