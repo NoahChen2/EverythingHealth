@@ -403,19 +403,15 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
                       path: currFood.img_url, fit: BoxFit.contain)),
             ),
           ),
-          Positioned(
+          EHFloatingButton(
               top: pageHeight * .8 * .10 - 50 / 2,
               left: pageWidth * .8 * .10 - 50 / 2,
-              child: GestureDetector(
-                  onTap: _handleEnlargeImage,
-                  child: Container(
-                      height: 50,
-                      width: 50,
-                      decoration: BoxDecoration(
-                          color: ColorTheme["darkenMain"],
-                          borderRadius: BorderRadius.circular(20)),
-                      child: Icon(Icons.arrow_back_ios,
-                          color: ColorTheme["textPrimary"])))),
+              onTap: _handleEnlargeImage,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: Icon(Icons.arrow_back_ios,
+                  color: ColorTheme["textPrimary"]),
+              )),
         ]);
       }
       if (!_editing) {
@@ -834,87 +830,71 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
         ),
         (_editing && _needSaveDecision && !_autoSaveApply && _isSaved
               ? Stack(children: [
-                  Positioned(
-                    top: pageHeight * .9 - 50,
+                  EHFloatingButton(
+                    top: pageHeight * .9 - 75,
                     left: pageWidth * .5,
-                    child: GestureDetector(
-                      onTap: () => _handleApplySave(),
-                      child: Container(
-                          height: 50,
-                          width: 100,
-                          decoration: BoxDecoration(
-                              color: ColorTheme["tertiaryBG"],
-                              border: Border(
-                                  left: BorderSide(
-                                      color: ColorTheme["coloredGrey"]!,
-                                      width: 2)),
-                              borderRadius: BorderRadius.only(
-                                  topRight: Radius.circular(5))),
-                          child: Center(
+                    color: ColorTheme["tertiaryBG"],
+                    height: 50,
+                    width: 100,
+                    onTap: () => _handleApplySave(),
+                    borderRadius: BorderRadius.horizontal(
+                                  right: Radius.circular(15)),
+                    child:  Center(
                               child: Text("✓ Apply to Save",
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
+                                      fontWeight: FontWeight.w600,
                                       color: ColorTheme["textPrimary"])))),
-                    ),
-                  ),
-                  Positioned(
-                    top: pageHeight * .9 - 50,
+                  EHFloatingButton(
+                    top: pageHeight * .9 - 75,
                     left: pageWidth * .5 - 100,
-                    child: GestureDetector(
-                      onTap: () => _handleApplyNew(),
-                      child: Container(
-                          height: 50,
-                          width: 100,
-                          decoration: BoxDecoration(
-                              color: ColorTheme["secondaryBG"],
-                              border: Border(
-                                  right: BorderSide(
-                                      color: ColorTheme["coloredGrey"]!,
-                                      width: 2)),
-                              borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(5))),
-                          child: Center(
+                    height: 50,
+                    width: 100,
+                    color: ColorTheme["secondaryBG"],
+                    onTap: () => _handleApplyNew(),
+                    borderRadius: BorderRadius.horizontal(
+                                  left: Radius.circular(15)),
+                    child: Center(
                               child: Text("+ Apply as New",
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                      color: ColorTheme["textPrimary"])))),
-                    ),
+                                      fontWeight: FontWeight.w600,
+                                      color: ColorTheme["textPrimary"]))
+                    )
                   ),
                 ])
-              : Positioned(
-                  top: pageHeight * .9 - 50,
-                  left: pageWidth * .5 - 100 / 2,
-                  child: GestureDetector(
+              : EHFloatingButton(
+                    top: pageHeight * .9 - 75,
+                    left: pageWidth * .5 - 100 / 2,
                     onTap: _editing
-                        ? (_autoSaveApply && _isSaved
-                            ? () => _handleApplySave()
-                            : () => _toggleEditAll())
-                        : () => _addFood(),
-                    child: Container(
-                        height: 50,
-                        width: 100,
-                        decoration: BoxDecoration(
-                            color: _editing
-                                ? ColorTheme["secondaryBG"]
-                                : ColorTheme["tertiaryBG"],
-                            borderRadius:
-                                BorderRadius.vertical(top: Radius.circular(5))),
-                        child: _editing
-                            ? Center(
-                                child: Text(
-                                    _autoSaveApply && _isSaved
-                                        ? "✓ Apply to Save"
-                                        : "✓ Apply",
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                        color: ColorTheme["textPrimary"])))
-                            : Center(
-                                child: Text("+ Add",
-                                    style: TextStyle(
-                                        color: ColorTheme["textPrimary"])),
-                              )),
-                  ),
-                )),
+                      ? (_autoSaveApply && _isSaved
+                          ? () => _handleApplySave()
+                          : () => _toggleEditAll())
+                      : () => _addFood(),
+                      height: 50,
+                      width: 100,
+                      borderRadiusValue: 15,
+                      color: _editing
+                              ? ColorTheme["secondaryBG"]
+                              : ColorTheme["tertiaryBG"],
+                      child: _editing
+                          ? Center(
+                              child: Text(
+                                  _autoSaveApply && _isSaved
+                                      ? "✓ Apply to Save"
+                                      : "✓ Apply",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: ColorTheme["textPrimary"])))
+                          : Center(
+                              child: Text("+ Add",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: ColorTheme["textPrimary"])),
+                            ),
+                    )
+                ),
         enlargedPic,
         
       ]);

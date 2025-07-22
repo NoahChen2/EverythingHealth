@@ -260,22 +260,62 @@ Widget EHPopupDisplay({
                 child: child,
             )
         ),
-      Positioned(
+      EHFloatingButton(
               top: closeTop,
               left: closeLeft,
-              child: GestureDetector(
-                onTap: dismiss,
-                child: Container(
-                  height: closeButtonSize,
-                  width: closeButtonSize,
-                  decoration: BoxDecoration(
-                      color: closeBGColor,
-                      borderRadius: BorderRadius.circular(closeButtonSize)),
-                  child: Icon(
+              onTap: dismiss,
+              borderRadiusValue: 50,
+              child: Icon(
                     Icons.close,
                     color: closeIconColor,
-                  ),
-                ),
-              )),
+              ),
+      ),
   ]);
+}
+
+Widget EHFloatingButton({
+  double? top,
+  double? bottom,
+  double? right,
+  double? left,
+  double height = 50,
+  double width = 50,
+  Widget child = const SizedBox.shrink(),
+  Color? color,
+  Color? borderColor,
+  double borderRadiusValue = 15,
+  double borderWidth = 2,
+  BorderRadius? borderRadius,
+  Border? border,
+  VoidCallback? onTap,
+  EdgeInsetsGeometry? padding,
+  double paddingValue = 5,
+  EdgeInsetsGeometry? margin, 
+  double marginValue = 0,
+  Decoration? decoration,
+})
+{
+  color = color ?? ColorTheme["primary"];
+  borderColor = borderColor ?? ColorTheme["primaryLight"]!.withAlpha(50);
+  return Positioned(
+    top: top,
+    bottom: bottom,
+    right: right,
+    left: left,
+    child: EHMenuButton(
+        padding: padding ?? EdgeInsets.all(paddingValue),
+        margin: margin ?? EdgeInsets.only(top: marginValue * 2, left: marginValue, right: marginValue),
+        height: height,
+        width: width,
+        decoration: decoration ?? 
+        BoxDecoration(
+            color: color,
+            borderRadius: borderRadius ?? BorderRadius.circular(borderRadiusValue), // Relative radius
+        ),
+        border: border ?? Border.all(color: borderColor, width: borderWidth),
+        borderRadius: borderRadius ?? BorderRadius.circular(borderRadiusValue),
+        onTap: onTap,
+        child: child,
+    ),
+  );
 }

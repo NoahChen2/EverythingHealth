@@ -725,8 +725,7 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                 ],
               )),
           foundFoodStatus != "none"
-              ? 
-              EHPopupDisplay(
+              ? EHPopupDisplay(
                   height: pageHeight * .7,
                   width: pageWidth * .9,
                   closeTop: pageHeight * .95 - 50 / 2,
@@ -921,22 +920,18 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                         textAlign: TextAlign.center,
                         overflow: TextOverflow.clip),
                   ),
-                  Positioned(
+                  EHFloatingButton(
                       top: 5,
-                      left: 5,
-                      child: GestureDetector(
-                          onTap: () {
-                            _scannerController.stop();
-                            setState(() => elementState = 0);
-                          },
-                          child: Container(
-                              height: 50,
-                              width: 50,
-                              decoration: BoxDecoration(
-                                  color: ColorTheme["darkenMain"],
-                                  borderRadius: BorderRadius.circular(20)),
-                              child: Icon(Icons.arrow_back_ios,
-                                  color: ColorTheme["textPrimary"])))),
+                      left: 15,
+                      onTap: () {
+                        _scannerController.stop();
+                        setState(() => elementState = 0);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
+                        child: Icon(Icons.arrow_back_ios,
+                            color: ColorTheme["textPrimary"]),
+                      )),
                 ],
               );
             },
@@ -1036,67 +1031,45 @@ class _ScanFoodPageState extends State<ScanFoodPage> {
                                           textAlign: TextAlign.center,
                                           overflow: TextOverflow.clip),
                                     ),
-                                    Align(
-                                      alignment: Alignment.bottomCenter,
-                                      child: GestureDetector(
-                                        onTap: _onCapturePressed,
-                                        child: Container(
-                                          height: 100,
-                                          width: 200,
-                                          decoration: BoxDecoration(
-                                            color: ColorTheme["secondaryBG"],
-                                            border: Border.all(
-                                                color:
-                                                    ColorTheme["textPrimary"]!
-                                                        .withAlpha(156),
-                                                width: 2),
-                                            borderRadius: BorderRadius.all(
-                                                Radius.circular(20)),
-                                          ),
-                                          margin: EdgeInsets.only(bottom: 40),
-                                          child: Center(
-                                            child: Icon(
-                                              Icons.camera_alt,
-                                              color: ColorTheme["textPrimary"],
-                                              size: 50,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
+                                    EHFloatingButton(
+                                      left: pageWidth / 2 - 50,
+                                      top: pageHeight - 100 - 40,
+                                      height: 100,
+                                      width: 100,
+                                      onTap: _onCapturePressed,
+                                      color: Colors.transparent,
+                                      border: Border.all(
+                                          color: ColorTheme["white"]!,
+                                          width: 5),
+                                      borderRadiusValue: 50,
+                                      child: Center(
+                                          child: Icon(Icons.circle,
+                                              color: ColorTheme["white"]!,
+                                              size: 90)),
                                     ),
-                                    Positioned(
+                                    EHFloatingButton(
                                         top: 5,
-                                        left: 5,
-                                        child: GestureDetector(
-                                            onTap: () async {
-                                              // First, properly dispose of the CameraController.
-                                              if (_controller != null) {
-                                                await _controller!.dispose();
-                                              }
-                                              // Nullify the controller and its future to prevent errors.
-                                              _controller = null;
-                                              _initializeControllerFuture =
-                                                  null;
+                                        left: 15,
+                                        onTap: () async {
+                                          // First, properly dispose of the CameraController.
+                                          if (_controller != null) {
+                                            await _controller!.dispose();
+                                          }
+                                          // Nullify the controller and its future to prevent errors.
+                                          _controller = null;
+                                          _initializeControllerFuture = null;
 
-                                              // THEN, update the state to navigate back to the menu.
-                                              if (mounted) {
-                                                setState(
-                                                    () => elementState = 0);
-                                              }
-                                            },
-                                            child: Container(
-                                                height: 50,
-                                                width: 50,
-                                                decoration: BoxDecoration(
-                                                    color: ColorTheme[
-                                                        "darkenMain"],
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            20)),
-                                                child: Icon(
-                                                    Icons.arrow_back_ios,
-                                                    color: ColorTheme[
-                                                        "textPrimary"])))),
+                                          // THEN, update the state to navigate back to the menu.
+                                          if (mounted) {
+                                            setState(() => elementState = 0);
+                                          }
+                                        },
+                                        child: Padding(
+                                          padding:
+                                              const EdgeInsets.only(left: 8.0),
+                                          child: Icon(Icons.arrow_back_ios,
+                                              color: ColorTheme["textPrimary"]),
+                                        )),
                                   ],
                                 );
                               },

@@ -14,8 +14,10 @@ class ColorServices {
     "textSecondary": const Color.fromARGB(255, 0, 0, 0),
     "secondary": const Color.fromARGB(255, 65, 224, 192),
     "secondaryBG": const Color.fromARGB(255, 26, 87, 75),
+    "secondaryBGAlt": const Color.fromARGB(255, 49, 110, 98),
     "tertiary": const Color.fromARGB(255, 255, 64, 129),
     "tertiaryBG": const Color.fromARGB(255, 132, 79, 97),
+    "tertiaryBGAlt": const Color.fromARGB(255, 147, 101, 116),
     "darkenMain": const Color.fromARGB(150, 0, 0, 0),
     "darkenSecondary": const Color.fromARGB(85, 0, 0, 0),
     "grey": const Color.fromARGB(255, 97, 97, 97),
@@ -24,6 +26,8 @@ class ColorServices {
     "lightGrey": const Color.fromARGB(255, 158, 158, 158),
     "darkGrey": const Color.fromARGB(255, 66, 66, 66),
     "transparent": const Color.fromARGB(0,0,0,0),
+    "white": const Color.fromARGB(255, 255, 255, 255),
+    "black": const Color.fromARGB(255, 0, 0, 0),
   };
 
   static final Map<String, Color> lightColors = {
@@ -36,8 +40,10 @@ class ColorServices {
     "textSecondary": const Color.fromARGB(255, 255, 255, 255),
     "secondary": const Color.fromARGB(255, 39, 141, 121),
     "secondaryBG": const Color.fromARGB(255, 149, 177, 171),
+    "secondaryBGAlt": const Color.fromARGB(255, 193, 209, 206),
     "tertiary": const Color.fromARGB(255, 217, 59, 111),
     "tertiaryBG": const Color.fromARGB(255, 189, 157, 168),
+    "tertiaryBGAlt": const Color.fromARGB(255, 219, 199, 206),
     "darkenMain": const Color.fromARGB(150, 0, 0, 0),
     "darkenSecondary": const Color.fromARGB(85, 0, 0, 0),
     "grey": const Color.fromARGB(255, 97, 97, 97),
@@ -46,6 +52,8 @@ class ColorServices {
     "lightGrey": const Color.fromARGB(255, 158, 158, 158),
     "darkGrey": const Color.fromARGB(255, 66, 66, 66),
     "transparent": const Color.fromARGB(0,0,0,0),
+    "white": const Color.fromARGB(255, 255, 255, 255),
+    "black": const Color.fromARGB(255, 0, 0, 0),
   };
   
   static ColorScheme createColorSchemeFromMap(Map<String, Color> colorMap) {
