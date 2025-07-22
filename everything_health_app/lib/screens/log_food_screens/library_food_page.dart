@@ -229,9 +229,9 @@ class _LibraryFoodPageState extends State<LibraryFoodPage> {
                           left: 10,
                           top: 80,
                         ), // Add some padding around the grid
-                        itemCount: foodList.length,
+                        itemCount: foodList.length + 1,
                         gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
+                        const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2, // This creates 2 columns
                           crossAxisSpacing: 20, // Horizontal space between cards
                           mainAxisSpacing: 20, // Vertical space between cards
@@ -239,12 +239,23 @@ class _LibraryFoodPageState extends State<LibraryFoodPage> {
                               100, // Aspect ratio of each card (width / height)
                         ),
                         itemBuilder: (BuildContext context, int index) {
-                          return EHFoodItemCard(
-                              food: foodList[index],
+                          if (index == 0){
+                            return EHMenuButton(
+                              marginValue: 0,
+                              onTap: () => print("open meals"),
+                              child: Center(
+                                child: Text("View Meals", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                              ),
+                            );
+                          }
+                          else{
+                            return EHFoodItemCard(
+                              food: foodList[index - 1],
                               saveFoodFunc: widget.saveFoodFunc,
                               addFoodFunc: widget.addFoodFunc,
                               addFoodToHistory: widget.addFoodToHistory,
                               afterSaveFunc: updateFoodList);
+                          }
                         },
                       ),
                     ),

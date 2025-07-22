@@ -85,6 +85,6 @@ class ColorServices {
     );
   }
   static Map<String, Color> colorTheme(){
-    return darkColors;
+    return /* lightColors */ darkColors;
   }
 }

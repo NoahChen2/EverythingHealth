@@ -9,6 +9,7 @@ import 'package:everything_health_app/services/nutrition_services.dart';
 import 'package:flutter/material.dart';
 // ignore: unnecessary_import
 import 'package:flutter/rendering.dart';
+import 'package:isar/isar.dart';
 import '../widgets/nav_bars.dart'; // Import MyTopNavigationBar
 import '../widgets/nav_item_builder.dart'; // Import buildNavItem
 import 'log_food_screens/search_food_page.dart'; // Import SearchFoodPage
@@ -192,6 +193,7 @@ class _LogFoodPageState extends State<LogFoodPage> {
   }
 }
 
+@embedded
 class FoodItem {
   static Random random = Random();
   String name;
@@ -383,6 +385,105 @@ class FoodItem {
       'time': time,
       'servings': servings,
       'meal': meal,
+    };
+  }
+}
+
+class MealItem {
+  static Random random = Random();
+  String name;
+  String normalized_name; // Added normalized_name for consistency
+  dynamic id;
+  Color color;
+  num time;
+  num servings;
+  bool isSaved;
+  List<FoodItem> mealFoods;
+
+  MealItem({
+    required this.name,
+    required this.normalized_name,
+    this.id = -1,
+    Color? color,
+    this.time = 0,
+    this.servings = 1,
+    this.isSaved = false,
+    required this.mealFoods,
+  }) : color = color ?? HSLColor.fromAHSL(1.0, random.nextInt(360).toDouble(), .38, .50).toColor(); // Provide a default color if none is given
+  
+  void operator []=(String key, dynamic value) {
+    switch (key) {
+      case 'name':
+        name = value;
+      case 'normalized_name':
+        normalized_name = value;
+      case 'id':
+        id = value;
+      case 'color':
+        color = value;
+      case 'time':
+        time = value;
+      case 'servings':
+        servings = value;
+      case 'isSaved':
+        isSaved = value;
+      case 'mealFoods':
+        mealFoods = value;
+      default:
+        throw ArgumentError('Unknown attribute: $key');
+    }
+  }
+  
+  dynamic operator [] (String key) {
+    switch (key) {
+      case 'name':
+        return name;
+      case 'normalized_name':
+        return normalized_name;
+      case 'id':
+        return id;
+      case 'color':
+        return color;
+      case 'time':
+        return time;
+      case 'servings':
+        return servings;
+      case 'isSaved':
+        return isSaved;
+      case 'mealFoods':
+        return mealFoods;
+      default:
+        throw ArgumentError('Unknown attribute: $key');
+    }
+  }
+
+  factory MealItem.fromJson(Map<String, dynamic> json) {
+    return MealItem(
+      name: json['name'] ?? 'Unknown Meal',
+      normalized_name: json['normalized_name'] ?? json['name'] ?? 'Unknown Meal',
+      color: json['color'] != null ? Color(json['color']) : HSLColor.fromAHSL(1.0, random.nextInt(360).toDouble(), .38, .50).toColor(),
+      id: json['id'] ?? -1,
+      time: json['time'] ?? 0,
+      servings: json['servings'] ?? 1,
+      isSaved: json['isSaved'] ?? false,
+      mealFoods: json['mealFoods'] ?? [],
+    );
+  }
+
+  @override
+  String toString(){
+    return "Meal: $name\nFoods: $mealFoods\n: $id";
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'normalized_name': normalized_name,
+      'id': id,
+      'color': color.toARGB32(),
+      'time': time,
+      'servings': servings,
+      'mealFoods': mealFoods,
     };
   }
 }

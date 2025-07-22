@@ -727,7 +727,7 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
                               decoration: BoxDecoration(
                                 color: viewNutritionInfo
                                     ? ColorTheme["primaryBGDark"]
-                                    : Color.fromARGB(0, 0, 0, 0),
+                                    : ColorTheme["transparent"],
                                 border: Border(
                                   top: BorderSide(
                                       color: ColorTheme["textPrimary"]!
@@ -739,7 +739,7 @@ class _ChooseFoodItemState extends State<ChooseFoodItem> {
                                   onTap: () => _toggleViewNutritionInfo(),
                                   child: Container(
                                     padding: EdgeInsets.all(5),
-                                    color: Color.fromARGB(0, 0, 0, 0),
+                                    color: ColorTheme["transparent"],
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
@@ -1538,7 +1538,7 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
                 : Icons.arrow_right,
             color: attributeID != "meal" && attributeID != "time"
                 ? ColorTheme["textPrimary"]
-                : Color.fromARGB(0, 0, 0, 0),
+                : ColorTheme["transparent"],
             size: 24,
           ),
           SizedBox(width: 10),
@@ -1740,7 +1740,7 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
                         attributeID == "time" ||
                         editingField
                     ? ColorTheme["textPrimary"]
-                    : Color.fromARGB(0, 0, 0, 0),
+                    : ColorTheme["transparent"],
                 size: 24),
           ),
         ]),
@@ -1933,7 +1933,7 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
         color: ["calories", "carbs", "fats", "protein", "sugar"]
                 .contains(attributeID)
             ? ColorTheme["primaryBGDark"]
-            : Color.fromARGB(0, 0, 0, 0),
+            : ColorTheme["transparent"],
       ),
       child: currEditing
           ? GestureDetector(
@@ -1946,7 +1946,7 @@ class _ModifiableFoodItemDataState extends State<ModifiableFoodItemData> {
                   focusNode: _allFocusNode,
                   child: Container(
                       padding: EdgeInsets.all(10),
-                      color: Color.fromARGB(0, 0, 0, 0),
+                      color: ColorTheme["transparent"],
                       child: attributeDisplayEdit)))
           : GestureDetector(
               onDoubleTap: () {
@@ -1982,11 +1982,11 @@ class GraphFoodItemDataDisplay extends StatefulWidget {
 }
 
 const Map<String, Color> kNutrientColors = {
-  'Calories': Color.fromARGB(255, 81, 214, 55),
-  'Carbs': Color.fromARGB(255, 214, 182, 55), // Placeholder Green
-  'Fats': Color.fromARGB(255, 174, 63, 63), // Placeholder Yellow
-  'Protein': Color.fromARGB(255, 174, 74, 232), // Placeholder Orange
-  'Sugar': Color.fromARGB(255, 64, 158, 220), // Placeholder Light Blue
+  'Calories': Color.fromARGB(255, 76, 164, 59),
+  'Carbs': Color.fromARGB(255, 170, 149, 64), // Placeholder Green
+  'Fats': Color.fromARGB(255, 154, 77, 77), // Placeholder Yellow
+  'Protein': Color.fromARGB(255, 131, 76, 163), // Placeholder Orange
+  'Sugar': Color.fromARGB(255, 73, 123, 156), // Placeholder Light Blue
 };
 
 class _GraphFoodItemDataDisplayState extends State<GraphFoodItemDataDisplay> {
@@ -2182,7 +2182,7 @@ class _GraphFoodItemDataDisplayState extends State<GraphFoodItemDataDisplay> {
                                     style: TextStyle(
                                       color: ColorTheme["textPrimary"],
                                       fontSize: 12,
-                                      fontWeight: FontWeight.w600,
+                                      fontWeight: FontWeight.w700,
                                     ),
                                   ),
                                 ),
@@ -2215,7 +2215,7 @@ class _GraphFoodItemDataDisplayState extends State<GraphFoodItemDataDisplay> {
             Text(
               detailsString,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 10, color: ColorTheme["lightGrey"]),
+              style: TextStyle(fontSize: 10, color: ColorTheme["grey"]),
             ),
           ],
         ),
