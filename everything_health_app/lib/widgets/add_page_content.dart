@@ -163,6 +163,13 @@ class AddPage extends StatelessWidget {
                                   label: "Strength",
                                   colorUsed: Colors.red,
                                   onTap: () => onLogFoodSelection(5)),
+                              _menuOptionRectangle(
+                                  height: menuOptionHeight,
+                                  width: menuOptionWidth,
+                                  icon: Icons.edit_document,
+                                  label: "Custom",
+                                  colorUsed: Colors.green,
+                                  onTap: () => onLogFoodSelection(6)),
                             ],
                           )
                         ],

@@ -136,17 +136,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     final bool wasShowingLogFood = logFoodIndex != -1;
     final bool willShowLogFood = index != -1;
 
-    // Update prevLogFoodIndex only if we are navigating to a valid new sub-page or coming from one
-    if (logFoodIndex != -1 && index != -1 && logFoodIndex != index) {
-      // This logic might be too simple if rapidly switching sub-pages.
-      // The current approach of just using index for LogFoodPage content is simpler.
-      // prevLogFoodIndex = logFoodIndex; // Keep previous valid index
-    } else if (willShowLogFood && !wasShowingLogFood) {
-      // If opening from scratch, and if prevLogFoodIndex was -1 (or some default like 0)
-      // ensure prevLogFoodIndex is set to a valid default for initial display before slide.
-      // For now, prevLogFoodIndex is set at the top if index != -1.
-    }
-
     if (mounted) {
       setState(() {
         if (index != -1) {
@@ -170,6 +159,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       // You could add a cross-fade or minor animation here if desired.
     }
   }
+
 
   void _onNavigatorSelection(int index) {
     if (_addPageAnimationController.value > 0.01 ||

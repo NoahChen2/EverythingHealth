@@ -2215,7 +2215,7 @@ class _GraphFoodItemDataDisplayState extends State<GraphFoodItemDataDisplay> {
             Text(
               detailsString,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 10, color: ColorTheme["grey"]),
+              style: TextStyle(fontSize: 10, color: ColorTheme["textPrimary"]!.withAlpha(179)),
             ),
           ],
         ),
