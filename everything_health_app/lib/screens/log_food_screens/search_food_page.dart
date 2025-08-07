@@ -103,6 +103,7 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
     
     try {
       // 1. Load the raw JSON string
+      await Future.delayed(const Duration(milliseconds: 250));
       _updateDisplayedFoods("");
       final String response = await rootBundle.loadString('assets/cleaned_normal_local_food_db.json');
       // 2. Parse into a list of maps
@@ -158,27 +159,15 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
   
     List<FoodItem> newDisplayedFoods = [];
     
-      if (query.isEmpty) {
-        // Show initial set from the raw maps, convert only these to FoodItem
-        newDisplayedFoods = [];
-        /** = _allFoodDataMaps
-            .take(_initialDisplayCount)
-            .map((jsonMap) => FoodItem.fromJson(jsonMap))
-            .toList();**/
-
-        // This sorting logic goes inside _updateDisplayedFoods method,
-        // after `matchedFoods` list is populated.
-        
-      } else {
         // Filter raw maps, then convert only matches to FoodItem objects
-        List<Map<String, dynamic>> matchedJsonMaps = _allFoodDataMaps
-            .where((foodMap) {
-              final String name = foodMap['normalized_name'] as String? ?? '';
-              return searchTerms.every((term) => name.contains(term));
-            }).toList();
-        final allSavedFoods = await isar.savedFoods.where().findAll();
-        final List<FoodItem> savedFoodItems = allSavedFoods.map((food) => FoodItem.fromJson(food.toJson())).toList();
-        for (var jsonMap in matchedJsonMaps) {
+      List<Map<String, dynamic>> matchedJsonMaps = _allFoodDataMaps
+          .where((foodMap) {
+            final String name = foodMap['normalized_name'] as String? ?? '';
+            return searchTerms.every((term) => name.contains(term));
+          }).toList();
+      final allSavedFoods = await isar.savedFoods.where().findAll();
+      final List<FoodItem> savedFoodItems = allSavedFoods.map((food) => FoodItem.fromJson(food.toJson())).toList();
+      for (var jsonMap in matchedJsonMaps) {
           try {
             final String name = jsonMap['name'] ?? '';
             final String serving_size = jsonMap['serving_size'] ?? '';
@@ -192,7 +181,7 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
             
             // 3. Perform the Isar search for each item, just like in _apiFoodSearch
             try{
-              final matchingSavedFood = savedFoodItems.firstWhere((saved) =>
+              savedFoodItems.firstWhere((saved) =>
                   saved.name == name &&
                   saved.serving_size == serving_size &&
                   saved.grams == grams &&
@@ -203,7 +192,6 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
                   saved.sugar == sugar &&
                   saved.servings == servings
               );
-              newDisplayedFoods.add(matchingSavedFood);
             }
             catch(e){
               newDisplayedFoods.add(FoodItem.fromJson(jsonMap));
@@ -212,32 +200,36 @@ class _SearchFoodPageState extends State<SearchFoodPage> {
             print("Error processing local search item: $e");
           }
         }
-        
+      newDisplayedFoods = [...savedFoodItems,...newDisplayedFoods];
+      if (query.isNotEmpty){
         newDisplayedFoods.sort((a, b) {
-          String nameA = a.normalized_name;
-          String nameB = b.normalized_name;
+            if (a.isSaved && !b.isSaved) return -1;
+            if (!a.isSaved && b.isSaved) return 1;
 
-          for (int i = 0; i < searchTerms.length; i++) {
-            int indexA = nameA.indexOf(searchTerms[i]);
-            int indexB = nameB.indexOf(searchTerms[i]);
+            String nameA = a.normalized_name;
+            String nameB = b.normalized_name;
 
-            // 1. Primary Sort: Earlier index of the query in the name
-            if (indexA != indexB) {
-              // If one doesn't contain it (shouldn't happen due to prior filter, but good for safety)
-              if (indexA == -1) return 1;
-              if (indexB == -1) return -1;
-              return indexA.compareTo(indexB); // Lower index means query is earlier, so it comes first
+            for (int i = 0; i < searchTerms.length; i++) {
+              int indexA = nameA.indexOf(searchTerms[i]);
+              int indexB = nameB.indexOf(searchTerms[i]);
+
+              // 1. Primary Sort: Earlier index of the query in the name
+              if (indexA != indexB) {
+                // If one doesn't contain it (shouldn't happen due to prior filter, but good for safety)
+                if (indexA == -1) return 1;
+                if (indexB == -1) return -1;
+                return indexA.compareTo(indexB); // Lower index means query is earlier, so it comes first
+              }
             }
-          }
 
-          // 2. Secondary Sort: Shorter name length
-          if (a.name.length != b.name.length) {
-            return a.name.length.compareTo(b.name.length); // Shorter name comes first
-          }
+            // 2. Secondary Sort: Shorter name length
+            if (a.name.length != b.name.length) {
+              return a.name.length.compareTo(b.name.length); // Shorter name comes first
+            }
 
-          // 3. Optional Tertiary Sort (e.g., alphabetical as a tie-breaker)
-          return nameA.compareTo(nameB);
-        });
+            // 3. Optional Tertiary Sort (e.g., alphabetical as a tie-breaker)
+            return nameA.compareTo(nameB);
+          });
       }
       setState(() {
         _displayedFoods = newDisplayedFoods;

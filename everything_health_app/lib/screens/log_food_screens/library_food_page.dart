@@ -229,7 +229,7 @@ class _LibraryFoodPageState extends State<LibraryFoodPage> {
                           left: 10,
                           top: 80,
                         ), // Add some padding around the grid
-                        itemCount: foodList.length + 1,
+                        itemCount: foodList.length,
                         gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2, // This creates 2 columns
@@ -239,23 +239,12 @@ class _LibraryFoodPageState extends State<LibraryFoodPage> {
                               100, // Aspect ratio of each card (width / height)
                         ),
                         itemBuilder: (BuildContext context, int index) {
-                          if (index == 0){
-                            return EHMenuButton(
-                              marginValue: 0,
-                              onTap: () => print("open meals"),
-                              child: Center(
-                                child: Text("View Meals", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                              ),
-                            );
-                          }
-                          else{
                             return EHFoodItemCard(
-                              food: foodList[index - 1],
+                              food: foodList[index],
                               saveFoodFunc: widget.saveFoodFunc,
                               addFoodFunc: widget.addFoodFunc,
                               addFoodToHistory: widget.addFoodToHistory,
                               afterSaveFunc: updateFoodList);
-                          }
                         },
                       ),
                     ),
